@@ -13,18 +13,18 @@ tiny.js aims to stay small and simple, while powerful and really useful.
 
 Objects
 
-- [`tiny.clone`](#tiny%BBcloneobj)
-- [`tiny.extend`](#tiny%BBextendtarget-%BB%BB%BBsources)
-- [`tiny.clone`](#tiny%BBisplainobjectobj)
+- [`tiny.clone`](#tiny.js#tinycloneobj)
+- [`tiny.extend`](#tinyextenddeep-target-sources)
+- [`tiny.clone`](#tinyisplainobjectobj)
 
 DOM
 
-- [`tiny.classList`](#tiny%BBclassList)
+- [`tiny.classList`](#tinyclasslist)
 
 Uncategorized
 
-- [`tiny.request`](#tiny%BBrequesturl-settings)
-- [`tiny.support`](#tiny%BBsupport)
+- [`tiny.request`](#tinyrequesturl-settings)
+- [`tiny.support`](#tinysupport)
 
 
 ## Installation
