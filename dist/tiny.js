@@ -54,6 +54,33 @@ module.exports = exports['default'];
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
+exports['default'] = clone;
+
+function clone(obj) {
+    if (!obj || typeof obj !== 'object') {
+        throw new Error('The "obj" parameter is required and must be an object.');
+    }
+
+    var copy = {},
+        prop = undefined;
+
+    for (prop in obj) {
+        if (obj[prop] !== undefined) {
+            copy[prop] = obj[prop];
+        }
+    }
+
+    return copy;
+}
+
+module.exports = exports['default'];
+
+},{}],3:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
 exports['default'] = extend;
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
@@ -133,7 +160,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":3}],3:[function(require,module,exports){
+},{"./isPlainObject":4}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -166,7 +193,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],4:[function(require,module,exports){
+},{}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -292,7 +319,7 @@ function request(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":2}],5:[function(require,module,exports){
+},{"./extend":3}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -411,7 +438,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -420,6 +447,10 @@ Object.defineProperty(exports, '__esModule', {
 });
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+var _modulesClone = require('./modules/clone');
+
+var _modulesClone2 = _interopRequireDefault(_modulesClone);
 
 var _modulesExtend = require('./modules/extend');
 
@@ -440,6 +471,7 @@ var _modulesClassList = require('./modules/classList');
 var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
 var tiny = {
+    clone: _modulesClone2['default'],
     extend: _modulesExtend2['default'],
     request: _modulesRequest2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
@@ -455,4 +487,4 @@ exports['default'] = tiny;
 module.exports = exports['default'];
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/classList":1,"./modules/extend":2,"./modules/isPlainObject":3,"./modules/request":4,"./modules/support":5}]},{},[6]);
+},{"./modules/classList":1,"./modules/clone":2,"./modules/extend":3,"./modules/isPlainObject":4,"./modules/request":5,"./modules/support":6}]},{},[7]);

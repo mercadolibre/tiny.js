@@ -13,7 +13,7 @@ tiny.js aims to stay small and simple, while powerful and really useful.
 
 Objects
 
-- [`tiny.clone`](#tiny.js#tinycloneobj)
+- [`tiny.clone`](#tinycloneobj)
 - [`tiny.extend`](#tinyextenddeep-target-sources)
 - [`tiny.clone`](#tinyisplainobjectobj)
 
