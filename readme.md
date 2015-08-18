@@ -15,7 +15,8 @@ Objects
 
 - [`tiny.clone`](#tinycloneobj)
 - [`tiny.extend`](#tinyextenddeep-target-sources)
-- [`tiny.clone`](#tinyisplainobjectobj)
+- [`tiny.inherits`](#tinyinheritsobj-superconstructor)
+- [`tiny.isPlainObject`](#tinyisplainobjectobj)
 
 DOM
 
@@ -48,6 +49,8 @@ Or grab [the source code](https://github.com/mercadolibre/tiny.js/blob/master/di
 ### `tiny.clone(obj)`
 
 ### `tiny.extend([deep,] target, ...sources)`
+
+### `tiny.inherits(obj, superConstructor)`
 
 ### `tiny.isPlainObject(obj)`
 
