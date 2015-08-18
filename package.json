@@ -21,6 +21,9 @@
     "url": "https://github.com/mercadolibre/tiny.js/issues"
   },
   "homepage": "https://github.com/mercadolibre/tiny.js#readme",
+  "browserify": {
+    "transform": ["babelify"]
+  },
   "devDependencies": {
     "babel": "^5.8.21",
     "babel-core": "^5.8.22",
