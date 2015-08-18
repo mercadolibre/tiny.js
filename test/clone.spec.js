@@ -17,9 +17,19 @@ describe('tiny.clone', () => {
         let target = clone(source);
 
         expect(target).to.be.eql(target);
+
         let fn = source.c;
+        let d = source.d;
+
         expect(fn()).to.be.equal(5);
+        expect(d).to.eql({e:3});
+
         fn = function() { return 0; };
-        expect(target.c()).to.be.equal(5);
+        d = {
+            e: 0
+        };
+
+        expect(target.c()).to.equal(5);
+        expect(target.d).to.eql({e:3});
     });
 });

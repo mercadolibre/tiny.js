@@ -1,5 +1,6 @@
 import clone from './modules/clone';
 import extend from './modules/extend';
+import inherits from './modules/inherits';
 import request from './modules/request';
 import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
@@ -8,6 +9,7 @@ import classList from './modules/classList';
 let tiny = {
     clone,
     extend,
+    inherits,
     request,
     isPlainObject,
     support,

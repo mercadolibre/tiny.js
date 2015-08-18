@@ -5,7 +5,7 @@ export var support = {
      * @static
      * @type {Boolean|Object}
      * @example
-     * if (ch.support.transition) {
+     * if (tiny.support.transition) {
          *     // Some code here!
          * }
      */
@@ -17,7 +17,7 @@ export var support = {
      * @static
      * @type {Boolean|Object}
      * @example
-     * if (ch.support.animation) {
+     * if (tiny.support.animation) {
          *     // Some code here!
          * }
      */
@@ -27,7 +27,7 @@ export var support = {
      * Checks is the User Agent supports touch events.
      * @type {Boolean}
      * @example
-     * if (ch.support.touch) {
+     * if (tiny.support.touch) {
          *     // Some code here!
          * }
      */
@@ -37,7 +37,7 @@ export var support = {
      * Checks is the User Agent supports custom events.
      * @type {Boolean}
      * @example
-     * if (ch.support.customEvent) {
+     * if (tiny.support.customEvent) {
          *     // Some code here!
          * }
      */

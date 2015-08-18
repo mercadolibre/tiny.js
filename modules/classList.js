@@ -2,11 +2,12 @@
  * Add or remove class
  *
  * @name classList
- * @memberof ch.util
+ * @memberof tiny
  * @param {HTMLElement} el A given HTMLElement.
  * @see Based on: <a href="http://youmightnotneedjquery.com/" target="_blank">http://youmightnotneedjquery.com/</a>
+ *
  * @example
- * ch.util.classList(document.body).add('ch-example');
+ * tiny.classList(document.body).add('ch-example');
  */
 export default function classList(el) {
     const isClassList = el.classList;
