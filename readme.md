@@ -15,7 +15,8 @@ Objects
 
 - [`tiny.clone`](#tinycloneobj)
 - [`tiny.extend`](#tinyextenddeep-target-sources)
-- [`tiny.clone`](#tinyisplainobjectobj)
+- [`tiny.inherits`](#tinyinheritsobj-superconstructor)
+- [`tiny.isPlainObject`](#tinyisplainobjectobj)
 
 DOM
 
@@ -25,6 +26,7 @@ Uncategorized
 
 - [`tiny.request`](#tinyrequesturl-settings)
 - [`tiny.support`](#tinysupport)
+- [`tiny.cokies`](#tinycookies)
 
 
 ## Installation
@@ -49,6 +51,8 @@ Or grab [the source code](https://github.com/mercadolibre/tiny.js/blob/master/di
 
 ### `tiny.extend([deep,] target, ...sources)`
 
+### `tiny.inherits(obj, superConstructor)`
+
 ### `tiny.isPlainObject(obj)`
 
 ### `tiny.classList`
@@ -56,3 +60,5 @@ Or grab [the source code](https://github.com/mercadolibre/tiny.js/blob/master/di
 ### `tiny.request(url, settings)`
 
 ### `tiny.support`
+
+### `tiny.cookies`
