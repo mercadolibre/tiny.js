@@ -5,6 +5,7 @@ import request from './modules/request';
 import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
 import classList from './modules/classList';
+import { cookies } from './modules/cookies';
 
 let tiny = {
     clone,
@@ -13,7 +14,8 @@ let tiny = {
     request,
     isPlainObject,
     support,
-    classList
+    classList,
+    cookies
 };
 
 let root = typeof self === 'object' && self.self === self && self ||
