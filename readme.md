@@ -26,6 +26,7 @@ Uncategorized
 
 - [`tiny.request`](#tinyrequesturl-settings)
 - [`tiny.support`](#tinysupport)
+- [`tiny.cokies`](#tinycookies)
 
 
 ## Installation
@@ -59,3 +60,5 @@ Or grab [the source code](https://github.com/mercadolibre/tiny.js/blob/master/di
 ### `tiny.request(url, settings)`
 
 ### `tiny.support`
+
+### `tiny.cookies`

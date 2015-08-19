@@ -84,7 +84,9 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports['default'] = extend;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
 
 var _isPlainObject = require('./isPlainObject');
 
@@ -228,7 +230,9 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports['default'] = request;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
 
 var _extend = require('./extend');
 
@@ -1187,7 +1191,9 @@ Object.defineProperty(exports, '__esModule', {
     value: true
 });
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
 
 var _modulesClone = require('./modules/clone');
 

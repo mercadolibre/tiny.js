@@ -27,6 +27,9 @@ describe('tiny.isPlainObject', () => {
         expect(isPlainObject(new fn())).to.be.false;
 
         // DOM nodes shouldn't be matched
-        expect(isPlainObject({nodeType: 1})).to.be.false;
+        expect(isPlainObject(document.body)).to.be.false;
+
+        // window shouldn't be matched
+        expect(isPlainObject(window)).to.be.false;
     });
 });
