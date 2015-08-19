@@ -82,6 +82,119 @@ module.exports = exports['default'];
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _isPlainObject = require('./isPlainObject');
+
+var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+var defaults = {
+    expires: '', // Empty string for session cookies
+    path: '/',
+    secure: false,
+    domain: ''
+};
+
+var day = 60 * 60 * 24;
+
+function get(key) {
+    var collection = document.cookie.split('; '),
+        value = null,
+        l = collection.length;
+
+    if (!l) {
+        return value;
+    }
+
+    for (var i = 0; i < l; i++) {
+        var parts = collection[i].split('='),
+            _name = decodeURIComponent(parts.shift());
+
+        if (key === _name) {
+            value = decodeURIComponent(parts.join('='));
+            break;
+        }
+    }
+
+    return value;
+}
+
+// Then `key` contains an object with keys and values for cookies, `value` contains the options object.
+function set(key, value, options) {
+    options = typeof options === 'object' ? options : { expires: options };
+
+    var expires = options.expires != null ? options.expires : defaults.expires;
+
+    if (typeof expires === 'string' && expires !== '') {
+        expires = new Date(expires);
+    } else if (typeof expires === 'number') {
+        expires = new Date(+new Date() + 1000 * day * expires);
+    }
+
+    if ('toGMTString' in expires) {
+        expires = ';expires=' + expires.toGMTString();
+    }
+
+    var path = ';path=' + (options.path || defaults.path);
+
+    var domain = options.domain || defaults.domain;
+    domain = domain ? ';domain=' + domain : '';
+
+    var secure = options.secure || defaults.secure ? ';secure' : '';
+
+    if (typeof value == 'object') {
+        if (Array.isArray(value) || (0, _isPlainObject2['default'])(value)) {
+            value = JSON.stringify(value);
+        } else {
+            value = '';
+        }
+    }
+
+    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure;
+}
+
+function remove(key) {
+    set(key, '', -1);
+}
+
+function enabled() {
+    if (navigator.cookieEnabled) {
+        return true;
+    }
+
+    set('__', '_');
+    var exist = get('__') === '_';
+    remove('__');
+
+    return exist;
+}
+
+var cookies = {
+    get: get,
+    set: set,
+    remove: remove,
+    enabled: enabled
+};
+
+exports.cookies = cookies;
+/*
+ * Escapes only characters that are not allowed in cookies
+ */
+function encodeCookie(value) {
+    return String(value).replace(/[,;"\\=\s%]/g, function (character) {
+        return encodeURIComponent(character);
+    });
+}
+
+},{"./isPlainObject":6}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
 exports['default'] = extend;
 
 function _interopRequireDefault(obj) {
@@ -163,7 +276,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":5}],4:[function(require,module,exports){
+},{"./isPlainObject":6}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -189,7 +302,7 @@ var _util = require('util');
 exports['default'] = _util.inherits;
 module.exports = exports['default'];
 
-},{"util":11}],5:[function(require,module,exports){
+},{"util":12}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -222,7 +335,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],6:[function(require,module,exports){
+},{}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -350,7 +463,7 @@ function request(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":3}],7:[function(require,module,exports){
+},{"./extend":4}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -469,7 +582,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -494,7 +607,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],9:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -586,14 +699,14 @@ process.chdir = function (dir) {
 };
 process.umask = function() { return 0; };
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 module.exports = function isBuffer(arg) {
   return arg && typeof arg === 'object'
     && typeof arg.copy === 'function'
     && typeof arg.fill === 'function'
     && typeof arg.readUInt8 === 'function';
 }
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 (function (process,global){
 // Copyright Joyent, Inc. and other Node contributors.
 //
@@ -1183,7 +1296,7 @@ function hasOwnProperty(obj, prop) {
 }
 
 }).call(this,require('_process'),typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./support/isBuffer":10,"_process":9,"inherits":8}],12:[function(require,module,exports){
+},{"./support/isBuffer":11,"_process":10,"inherits":9}],13:[function(require,module,exports){
 (function (global){
 'use strict';
 
@@ -1221,6 +1334,8 @@ var _modulesClassList = require('./modules/classList');
 
 var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
+var _modulesCookies = require('./modules/cookies');
+
 var tiny = {
     clone: _modulesClone2['default'],
     extend: _modulesExtend2['default'],
@@ -1228,7 +1343,8 @@ var tiny = {
     request: _modulesRequest2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
-    classList: _modulesClassList2['default']
+    classList: _modulesClassList2['default'],
+    cookies: _modulesCookies.cookies
 };
 
 var root = typeof self === 'object' && self.self === self && self || typeof global === 'object' && global.global === global && global || undefined;
@@ -1239,4 +1355,4 @@ exports['default'] = tiny;
 module.exports = exports['default'];
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{"./modules/classList":1,"./modules/clone":2,"./modules/extend":3,"./modules/inherits":4,"./modules/isPlainObject":5,"./modules/request":6,"./modules/support":7}]},{},[12]);
+},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/extend":4,"./modules/inherits":5,"./modules/isPlainObject":6,"./modules/request":7,"./modules/support":8}]},{},[13]);
