@@ -1,4 +1,4 @@
-import { inherits } from 'util';
+import inherits from 'inherits';
 
 /**
  * Inherits the prototype methods from one constructor into another.
@@ -12,6 +12,6 @@ import { inherits } from 'util';
  * @exampleDescription
  *
  * @example
- * tiny.inherit(obj, parent);
+ * tiny.inherits(obj, parent);
  */
 export default inherits;

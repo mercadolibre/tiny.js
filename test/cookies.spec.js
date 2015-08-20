@@ -64,6 +64,13 @@ describe('tiny.cookies', () => {
             cookies.set(cookieName, value, days);
             expect(getCookie(cookieName)).to.be.empty;
         });
+        it('should set a session cookie', () => {
+            let value = 'string-value';
+            cookies.set(cookieName, value);
+            expect(getCookie(cookieName)).to.equal(value);
+            cookies.set(cookieName, (value + value), {expires: null});
+            expect(getCookie(cookieName)).to.equal(value + value);
+        });
     });
 
     describe('.get()', () => {
