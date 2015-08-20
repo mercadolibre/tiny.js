@@ -277,6 +277,20 @@ function extend() {
 module.exports = exports['default'];
 
 },{"./isPlainObject":6}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _inherits = require('inherits');
+
+var _inherits2 = _interopRequireDefault(_inherits);
+
 /**
  * Inherits the prototype methods from one constructor into another.
  * The parent will be accessible through the obj.super_ property. Fully
@@ -291,20 +305,8 @@ module.exports = exports['default'];
  * @example
  * tiny.inherits(obj, parent);
  */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-  value: true
-});
-
-var _inherits = require('inherits');
-
-Object.defineProperty(exports, 'inherits', {
-  enumerable: true,
-  get: function get() {
-    return _inherits.inherits;
-  }
-});
+exports['default'] = _inherits2['default'];
+module.exports = exports['default'];
 
 },{"inherits":9}],6:[function(require,module,exports){
 'use strict';
