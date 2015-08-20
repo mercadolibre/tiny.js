@@ -18,10 +18,8 @@ let tiny = {
     cookies
 };
 
-let root = typeof self === 'object' && self.self === self && self ||
-    typeof global === 'object' && global.global === global && global ||
-    this;
-
-root.tiny = tiny;
+if (typeof window !== 'undefined') {
+    window.tiny = tiny;
+}
 
 export default tiny;

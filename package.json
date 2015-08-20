@@ -22,7 +22,9 @@
   },
   "homepage": "https://github.com/mercadolibre/tiny.js#readme",
   "browserify": {
-    "transform": ["babelify"]
+    "transform": [
+      "babelify"
+    ]
   },
   "devDependencies": {
     "babel": "^5.8.21",
@@ -37,6 +39,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-run-sequence": "^0.3.2",
     "gulp-uglify": "^1.2.0",
+    "inherits": "^2.0.1",
     "karma": "^0.13.9",
     "karma-browserify": "^4.3.0",
     "karma-chai": "^0.1.0",

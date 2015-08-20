@@ -1,5 +1,3 @@
-import { inherits } from 'util';
-
 /**
  * Inherits the prototype methods from one constructor into another.
  * The parent will be accessible through the obj.super_ property. Fully
@@ -12,6 +10,6 @@ import { inherits } from 'util';
  * @exampleDescription
  *
  * @example
- * tiny.inherit(obj, parent);
+ * tiny.inherits(obj, parent);
  */
-export default inherits;
+export { inherits } from 'inherits';
