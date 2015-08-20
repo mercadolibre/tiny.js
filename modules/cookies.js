@@ -43,7 +43,7 @@ function set(key, value, options) {
         expires = new Date(+new Date + (1000 * day * expires));
     }
 
-    if ('toGMTString' in expires) {
+    if (expires && 'toGMTString' in expires) {
         expires = ';expires=' + expires.toGMTString();
     }
 
