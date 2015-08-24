@@ -189,7 +189,392 @@ function encodeCookie(value) {
     });
 }
 
-},{"./isPlainObject":7}],4:[function(require,module,exports){
+},{"./isPlainObject":8}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports.initEvent = initEvent;
+exports.on = on;
+exports.one = one;
+exports.off = off;
+exports.trigger = trigger;
+exports.triggerHandler = triggerHandler;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _extend = require('./extend');
+
+var _extend2 = _interopRequireDefault(_extend);
+
+var _isPlainObject = require('./isPlainObject');
+
+var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+var DOM_EVENTS = (function () {
+    var events = [];
+    for (var attr in document) {
+        if (attr.substring(0, 2) === 'on') {
+            var evt = attr.replace('on', '');
+            events.push(evt);
+        }
+    }
+    return events;
+})();
+
+var MOUSE_EVENTS = DOM_EVENTS.filter(function (name) {
+    return (/^(?:click|dblclick|mouse(?:down|up|over|move|out))$/.test(name)
+    );
+});
+// TODO: Review the possibility of using the pointer events for IE8
+
+var focusinSupported = DOM_EVENTS.indexOf('focusin') !== -1;
+
+var focus = { focus: 'focusin', blur: 'focusout' };
+
+//let eventPrefix = document.addEventListener ? '' : 'on';
+
+// Element unique ID
+var _euid = 1;
+
+var handlers = {};
+
+// Element unique ID generator
+function euid(el) {
+    return el._euid || (el._euid = _euid++);
+}
+
+function returnTrue() {
+    return true;
+}
+
+function returnFalse() {
+    return false;
+}
+
+function parse(event) {
+    var parts = ('' + event).split('.');
+    return {
+        e: parts[0],
+        ns: parts.slice(1).sort().join(' ')
+    };
+}
+
+function getElements(el) {
+    if (typeof el === 'string') {
+        return [].slice.call(document.querySelectorAll(el));
+    } else if (el.length) {
+        [].slice.call(el);
+    } else {
+        return [el];
+    }
+}
+
+function findHandlers(el, event, fn, selector) {
+    event = parse(event);
+
+    if (event.ns) {
+        var matcher = new RegExp('(?:^| )' + event.ns.replace(' ', ' .* ?') + '(?: |$)');
+    }
+    return (handlers[euid(el)] || []).filter(function (handler) {
+        return handler && (!event.e || handler.e == event.e) && (!event.ns || matcher.test(handler.ns)) && (!fn || euid(handler.fn) === euid(fn)) && (!selector || handler.sel == selector);
+    });
+}
+
+function createProxy(event) {
+    var key,
+        proxy = { originalEvent: event };
+    for (key in event) if (event.hasOwnProperty(key) && !/^([A-Z]|returnValue$|layer[XY]$)/.test(key) && event[key] !== undefined) {
+        proxy[key] = event[key];
+    }
+
+    return compatible(proxy, event);
+}
+
+var eventMethods = {
+    preventDefault: 'isDefaultPrevented',
+    stopImmediatePropagation: 'isImmediatePropagationStopped',
+    stopPropagation: 'isPropagationStopped'
+};
+
+function compatible(event, source) {
+    if (source || !event.isDefaultPrevented) {
+        if (!source) {
+            source = event;
+        }
+
+        var _loop = function _loop(_name) {
+            var predicate = eventMethods[_name],
+                sourceMethod = source[_name];
+
+            event[_name] = function () {
+                this[predicate] = returnTrue;
+                return sourceMethod && sourceMethod.apply(source, arguments);
+            };
+            event[predicate] = returnFalse;
+        };
+
+        for (var _name in eventMethods) {
+            _loop(_name);
+        }
+
+        /*
+         event.stopImmediatePropagation = function () {
+            this.isImmediatePropagationEnabled = false;
+            this.cancelBubble = true;
+         };
+        */
+
+        if (typeof source.defaultPrevented !== 'undefined' ? source.defaultPrevented : 'returnValue' in source ? source.returnValue === false : source.getPreventDefault && source.getPreventDefault()) {
+            event.isDefaultPrevented = returnTrue;
+        }
+    }
+    return event;
+}
+
+function eventCapture(handler, captureSetting) {
+    return handler.del && (!focusinSupported && handler.e in focus) || !!captureSetting;
+}
+
+function closest(el, selector) {
+    // TODO: Add IE8 support
+    return el.closest ? el.closest(selector) : (function (selector) {
+        while (el) {
+            if ((el.matches || el.mozMatchesSelector || el.msMatchesSelector || el.oMatchesSelector || el.webkitMatchesSelector).call(el, selector)) {
+                break;
+            }
+
+            el = el.parentElement;
+        }
+
+        return el;
+    })(selector);
+}
+
+function add(el, types, fn, data, selector, delegator) {
+    var id = euid(el),
+        elHandlers = handlers[id] || (handlers[id] = []);
+
+    types.split(/\s/).forEach(function (event) {
+        if (event === 'ready') {
+            if (document.readyState === 'complete' || !document.attachEvent && document.readyState === 'interactive') {
+                setTimeout(fn, 1);
+            }
+
+            // TODO: Handle well an IE8
+            return document.addEventListener ? document.addEventListener('DOMContentLoaded', fn, false) : window.attachEvent('onload', fn);
+        }
+
+        var handler = parse(event);
+        handler.fn = fn;
+        handler.sel = selector;
+
+        // emulate mouseenter, mouseleave
+        /*
+        if (handler.e in hover) fn = function(e) {
+            var related = e.relatedTarget;
+            if (!related || (related !== this && !$.contains(this, related)))
+                return handler.fn.apply(this, arguments);
+        }
+        */
+        handler.del = delegator;
+
+        var callback = delegator || fn;
+
+        handler.proxy = function (e) {
+            e = compatible(e);
+
+            if (e.isImmediatePropagationStopped()) {
+                return;
+            }
+
+            e.data = data;
+
+            var result = callback.apply(el, e._args ? [e].concat(e._args) : [e]);
+            if (result === false) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            return result;
+        };
+
+        handler.i = elHandlers.length;
+        elHandlers.push(handler);
+
+        if ('addEventListener' in el) el.addEventListener(focusinSupported && focus[handler.e] || handler.e, handler.proxy, eventCapture(handler, false));
+    });
+}
+
+function remove(el, events, fn, selector, capture) {
+    var id = euid(el);
+
+    (events || '').split(/\s/).forEach(function (event) {
+        findHandlers(el, event, fn, selector).forEach(function (handler) {
+            delete handlers[id][handler.i];
+            if ('removeEventListener' in el) el.removeEventListener(focusinSupported && focus[handler.e] || handler.e, handler.proxy, eventCapture(handler, capture));
+        });
+    });
+}
+
+function initEvent(name, props) {
+    if (typeof name !== 'string') {
+        props = name;
+        name = props.type;
+    }
+    var event = undefined,
+        isDomEvent = DOM_EVENTS.indexOf(name) !== -1;
+
+    var data = (0, _extend2['default'])({
+        bubbles: isDomEvent,
+        cancelable: isDomEvent,
+        detail: undefined
+    }, props);
+
+    /*if(document.createEvent) {
+        event = document.createEvent('MouseEvents');
+        event.initEvent(name, true, false);
+    } else if(document.createEventObject) {
+        event = document.createEventObject();
+    }*/
+
+    event = document.createEvent(isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1 ? 'MouseEvents' : 'Events');
+    event.initEvent(name, data.bubbles, data.cancelable, data.detail);
+
+    return compatible(event);
+}
+
+function on(elem, types, selector, data, fn, one) {
+    if (data == null && fn == null) {
+        // ( elem, types, fn )
+        fn = selector;
+        data = selector = undefined;
+    } else if (fn == null) {
+        if (typeof selector === 'string') {
+            // ( elem, types, selector, fn )
+            fn = data;
+            data = undefined;
+        } else {
+            // ( elem, types, data, fn )
+            fn = data;
+            data = selector;
+            selector = undefined;
+        }
+    }
+    if (fn === false) {
+        fn = returnFalse;
+    }
+
+    return getElements(elem).forEach(function (el) {
+        var origFn = undefined,
+            delegator = undefined;
+
+        if (one === 1) {
+            origFn = fn;
+            fn = function (event) {
+                off(el, event.type, fn);
+                return origFn.apply(el, arguments);
+            };
+        }
+
+        if (selector) {
+            delegator = function (e) {
+                var evt = undefined,
+                    match = closest(e.target, selector);
+
+                if (match && match !== el) {
+                    evt = (0, _extend2['default'])(createProxy(e), {
+                        currentTarget: match,
+                        liveFired: el
+                    });
+
+                    return fn.apply(match, [evt].concat([].slice.call(arguments, 1)));
+                }
+            };
+        }
+        add(el, types, fn, data, selector, delegator);
+    });
+}
+
+function one(elem, events, selector, data, callback) {
+    return on(elem, events, selector, data, callback, 1);
+}
+
+function off(elem, event, selector, callback) {
+    if (typeof selector !== 'string' && typeof callback !== 'function' && callback !== false) {
+        callback = selector;
+        selector = undefined;
+    }
+
+    if (callback === false) {
+        callback = returnFalse;
+    }
+
+    getElements(elem).forEach(function (el) {
+        remove(el, event, callback, selector);
+    });
+}
+
+function trigger(elem, event, args) {
+    event = typeof event === 'string' || (0, _isPlainObject2['default'])(event) ? initEvent(event) : compatible(event);
+    event._args = args;
+
+    getElements(elem).forEach(function (el) {
+        // handle focus(), blur() by calling them directly
+        if (event.type in focus && typeof this[event.type] == 'function') {
+            this[event.type]();
+        }
+        // items in the collection might not be DOM elements
+        else if ('dispatchEvent' in el) {
+                el.dispatchEvent(event);
+            }
+            // TODO: Don't forget about IE8
+            else {
+                    triggerHandler(el, event, args);
+                }
+    });
+}
+
+/**
+ * Triggers event handlers on current element just as if an event occurred
+ * but doesn't trigger an actual event and doesn't bubble
+ *
+ * @param elem
+ * @param event
+ * @param args
+ */
+
+function triggerHandler(elem, event, args) {
+    var e = undefined;
+
+    getElements(elem).forEach(function (el) {
+        e = createProxy(typeof event === 'string' ? initEvent(event) : event);
+        e._args = args;
+        e.target = el;
+
+        findHandlers(el, event.type || event).forEach(function (handler) {
+            handler.proxy(e);
+            if (e.isImmediatePropagationStopped()) {
+                return false;
+            }
+        });
+    });
+}
+
+var domEvents = {
+    Event: initEvent,
+    on: on,
+    one: one,
+    off: off,
+    trigger: trigger,
+    triggerHandler: triggerHandler
+};
+exports.domEvents = domEvents;
+
+},{"./extend":6,"./isPlainObject":8}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -221,7 +606,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":10}],5:[function(require,module,exports){
+},{"events":11}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -308,7 +693,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":7}],6:[function(require,module,exports){
+},{"./isPlainObject":8}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -340,7 +725,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":11}],7:[function(require,module,exports){
+},{"inherits":12}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -373,7 +758,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],8:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -501,7 +886,7 @@ function request(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":5}],9:[function(require,module,exports){
+},{"./extend":6}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -620,7 +1005,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -923,7 +1308,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -948,7 +1333,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -991,6 +1376,8 @@ var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
 var _modulesCookies = require('./modules/cookies');
 
+var _modulesDomEvents = require('./modules/domEvents');
+
 var tiny = {
     clone: _modulesClone2['default'],
     extend: _modulesExtend2['default'],
@@ -1000,7 +1387,14 @@ var tiny = {
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
-    cookies: _modulesCookies.cookies
+    cookies: _modulesCookies.cookies,
+    Event: _modulesDomEvents.domEvents.Event,
+    on: _modulesDomEvents.domEvents.on,
+    bind: _modulesDomEvents.domEvents.on,
+    one: _modulesDomEvents.domEvents.one,
+    once: _modulesDomEvents.domEvents.one,
+    off: _modulesDomEvents.domEvents.off,
+    trigger: _modulesDomEvents.domEvents.trigger
 };
 
 if (typeof window !== 'undefined') {
@@ -1010,4 +1404,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/eventEmitter":4,"./modules/extend":5,"./modules/inherits":6,"./modules/isPlainObject":7,"./modules/request":8,"./modules/support":9}]},{},[12]);
+},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/domEvents":4,"./modules/eventEmitter":5,"./modules/extend":6,"./modules/inherits":7,"./modules/isPlainObject":8,"./modules/request":9,"./modules/support":10}]},{},[13]);

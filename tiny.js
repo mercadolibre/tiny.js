@@ -7,6 +7,7 @@ import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
 import classList from './modules/classList';
 import { cookies } from './modules/cookies';
+import { domEvents } from './modules/domEvents';
 
 let tiny = {
     clone,
@@ -17,7 +18,14 @@ let tiny = {
     isPlainObject,
     support,
     classList,
-    cookies
+    cookies,
+    Event: domEvents.Event,
+    on: domEvents.on,
+    bind: domEvents.on,
+    one: domEvents.one,
+    once: domEvents.one,
+    off: domEvents.off,
+    trigger: domEvents.trigger
 };
 
 if (typeof window !== 'undefined') {
