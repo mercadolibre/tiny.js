@@ -3,6 +3,7 @@ import { domEvents } from '../modules/domEvents';
 describe('domEvents', () => {
     let container = document.createElement('div');
     let button = document.createElement('button');
+    let input;
 
     function click(el) {
         var event = document.createEvent('MouseEvents');
@@ -11,9 +12,10 @@ describe('domEvents', () => {
     }
 
     before(() => {
-        container.innerHTML = '<div class="child"></div>';
+        container.innerHTML = '<div class="child"><input id="input" value=""/></div>';
         document.body.appendChild(container);
         container.appendChild(button);
+        input = document.querySelector('#input');
     });
 
     after(() => {
@@ -22,21 +24,23 @@ describe('domEvents', () => {
 
     it('should just to be defined', () => {
         expect(domEvents).to.exist;
-        expect(domEvents).to.have.all.keys('Event', 'on', 'one', 'off', 'trigger', 'triggerHandler');
+        expect(domEvents).to.have.all.keys('on', 'one', 'off', 'trigger');
     });
 
     describe('#on', () => {
         let cb11 = chai.spy();
         let cb12 = chai.spy();
+        let cb13 = chai.spy();
 
         it('should add event listener to an element', () => {
             domEvents.on('button', 'click', cb11);
-            domEvents.on(button, 'click.special', cb11);
-            domEvents.on('body', 'click', 'button', cb12);
-            domEvents.on(document.body, 'click', 'button', cb12);
+            domEvents.on(button, 'click', cb12);
+            domEvents.on('#input', 'click', cb13);
             click(button);
-            expect(cb11).to.have.been.called.twice;
-            expect(cb12).to.have.been.called.twice;
+            click(input);
+            expect(cb11).to.have.been.called.once;
+            expect(cb12).to.have.been.called.once;
+            expect(cb13).to.have.been.called.once;
         });
     });
 
@@ -46,19 +50,20 @@ describe('domEvents', () => {
         let cb23 = chai.spy();
 
         it('should remove event listener from an element', () => {
-            domEvents.on(button, 'click', cb21);
-            domEvents.on('button', 'click', cb22);
-            domEvents.on(document.body, 'click', 'button', cb23);
-            domEvents.on(document.body, 'click.special', 'button', cb23);
+            domEvents.on('button', 'click', cb21);
+            domEvents.on(button, 'click', cb22);
+            domEvents.on('#input', 'click', cb23);
 
-            domEvents.off(button, 'click');
-            domEvents.off(document.body, 'click.special', 'button', cb23);
+            domEvents.off('button', 'click', cb21);
+            domEvents.off(button, 'click', cb22);
+            domEvents.off('#input', 'click', cb23);
 
             click(button);
+            click(input);
 
             expect(cb21).to.have.not.been.called();
             expect(cb22).to.have.not.been.called();
-            expect(cb23).to.have.been.called.once;
+            expect(cb23).to.have.not.been.called();
         });
     });
 
@@ -68,10 +73,11 @@ describe('domEvents', () => {
 
         it('should add event listener to an element that fires only once', () => {
             domEvents.one(button, 'click', cb31);
-            domEvents.one(document.body, 'click', 'button', cb32);
+            domEvents.one(input, 'click', cb32);
             click(button);
+            click(input);
             click(button);
-            click(button);
+            click(input);
             expect(cb31).to.have.been.called.once;
             expect(cb32).to.have.been.called.once;
         });
@@ -95,20 +101,6 @@ describe('domEvents', () => {
             domEvents.trigger(document.body, 'layoutchange');
 
             expect(cb43).to.have.been.called.twice;
-        });
-    });
-
-    describe('#triggerHandler', () => {
-        let cb51 = chai.spy();
-        let cb52 = chai.spy();
-
-        it('should trigger an event handler without the triggering of an actual event', () => {
-            domEvents.on(button, 'click', cb51);
-            domEvents.on(button, 'click', cb52);
-            domEvents.triggerHandler(button, 'click');
-
-            expect(cb51).to.have.been.called.once;
-            expect(cb52).to.have.been.called.once;
         });
     });
 
