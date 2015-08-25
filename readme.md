@@ -18,6 +18,11 @@ Objects
 - [`tiny.inherits`](#tinyinheritsobj-superconstructor)
 - [`tiny.isPlainObject`](#tinyisplainobjectobj)
 
+Events
+
+- [`tiny.EventEmitter`](#tinyeventemitter)
+
+
 DOM
 
 - [`tiny.classList`](#tinyclasslist)
@@ -54,6 +59,8 @@ Or grab [the source code](https://github.com/mercadolibre/tiny.js/blob/master/di
 ### `tiny.inherits(obj, superConstructor)`
 
 ### `tiny.isPlainObject(obj)`
+
+### `tiny.EventEmitter`
 
 ### `tiny.classList`
 

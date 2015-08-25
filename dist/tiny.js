@@ -189,7 +189,242 @@ function encodeCookie(value) {
     });
 }
 
-},{"./isPlainObject":6}],4:[function(require,module,exports){
+},{"./isPlainObject":8}],4:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports.initEvent = initEvent;
+exports.on = on;
+exports.one = one;
+exports.off = off;
+exports.trigger = trigger;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _extend = require('./extend');
+
+var _extend2 = _interopRequireDefault(_extend);
+
+var _isPlainObject = require('./isPlainObject');
+
+var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+var DOM_EVENTS = (function () {
+    var events = [];
+    for (var attr in document) {
+        if (attr.substring(0, 2) === 'on') {
+            var evt = attr.replace('on', '');
+            events.push(evt);
+        }
+    }
+    return events;
+})();
+
+var MOUSE_EVENTS = DOM_EVENTS.filter(function (name) {
+    return (/^(?:click|dblclick|mouse(?:down|up|over|move|out))$/.test(name)
+    );
+});
+
+var isStandard = document.addEventListener ? true : false;
+
+var addHandler = isStandard ? 'addEventListener' : 'attachEvent';
+
+var removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
+
+var dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
+
+function getElements(el) {
+    if (typeof el === 'string') {
+        return [].slice.call(document.querySelectorAll(el));
+    } else if (el.length) {
+        [].slice.call(el);
+    } else {
+        return [el];
+    }
+}
+
+function initEvent(name, props) {
+    if (typeof name !== 'string') {
+        props = name;
+        name = props.type;
+    }
+    var event = undefined,
+        isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
+        isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
+
+    var data = (0, _extend2['default'])({
+        bubbles: isDomEvent,
+        cancelable: isDomEvent,
+        detail: undefined
+    }, props);
+
+    if (document.createEvent) {
+        event = document.createEvent(isMouseEvent && window.MouseEvent ? 'MouseEvents' : 'Events');
+        event.initEvent(name, data.bubbles, data.cancelable, data.detail);
+    } else if (document.createEventObject) {
+        event = document.createEventObject(window.event);
+        if (isMouseEvent) {
+            event.button = 1;
+        }
+        if (!data.bubbles) {
+            event.cancelBubble = true;
+        }
+    }
+
+    return event;
+}
+
+function normalizeEventName(event) {
+    if (event.substr(0, 2) === 'on') {
+        return isStandard ? event.substr(2) : event;
+    } else {
+        return isStandard ? event : 'on' + event;
+    }
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.addEventListener.
+ *
+ * @memberof tiny
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function
+ * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
+ *
+ * @example
+ * tiny.on(document, 'click', function(e){}, false);
+ *
+ * tiny.on('p > button', 'click', function(e){}, false);
+ */
+
+function on(elem, event, handler, bubbles) {
+    getElements(elem).forEach(function (el) {
+        el[addHandler](normalizeEventName(event), handler, bubbles || false);
+    });
+}
+
+/**
+ * Attach a handler to an event for the {HTMLElement} that executes only
+ * once.
+ *
+ * @memberof ch.Event
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function
+ * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
+ *
+ * @example
+ * tiny.one(document, 'click', function(e){}, false);
+ */
+
+function one(elem, event, handler, bubbles) {
+    getElements(elem).forEach(function (el) {
+        var origHandler = handler;
+
+        handler = function (e) {
+            off(el, e.type, handler);
+
+            return origHandler.apply(el, arguments);
+        };
+
+        el[addHandler](normalizeEventName(event), handler, bubbles || false);
+    });
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.removeEventListener.
+ *
+ * @memberof ch.Event
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to remove listener from
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function to remove
+ *
+ * @example
+ * tiny.off(document, 'click', fn);
+ */
+
+function off(elem, event, handler) {
+    getElements(elem).forEach(function (el) {
+        el[removeHandler](normalizeEventName(event), handler);
+    });
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.removeEventListener.
+ *
+ * @memberof tiny
+ * @type {Function}
+ * @param {HTMLElement} elem An HTMLElement or a CSS selector to dispatch event to
+ * @param {String|Event} event Event name or an event object
+ *
+ * @example
+ * tiny.trigger('.btn', 'click');
+ */
+
+function trigger(elem, event, props) {
+    var _this = this;
+
+    var name = typeof event === 'string' ? event : event.type;
+    event = typeof event === 'string' || (0, _isPlainObject2['default'])(event) ? initEvent(event, props) : event;
+
+    getElements(elem).forEach(function (el) {
+        // handle focus(), blur() by calling them directly
+        if (event.type in focus && typeof _this[event.type] == 'function') {
+            _this[event.type]();
+        } else {
+            isStandard ? el[dispatch](event) : el[dispatch](normalizeEventName(name), event);
+        }
+    });
+}
+
+var domEvents = {
+    on: on,
+    one: one,
+    off: off,
+    trigger: trigger
+};
+exports.domEvents = domEvents;
+
+},{"./extend":6,"./isPlainObject":8}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+  value: true
+});
+
+function _interopRequireDefault(obj) {
+  return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _events = require('events');
+
+var _events2 = _interopRequireDefault(_events);
+
+/**
+ * Inherits the prototype methods from one constructor into another.
+ * The parent will be accessible through the obj.super_ property. Fully
+ * compatible with standard node.js inherits.
+ *
+ * @memberof tiny
+ * @param {Function} obj An object that will have the new members.
+ * @param {Function} superConstructor The constructor Class.
+ * @returns {Object}
+ * @exampleDescription
+ *
+ * @example
+ * tiny.inherits(obj, parent);
+ */
+exports['default'] = _events2['default'];
+module.exports = exports['default'];
+
+},{"events":11}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -276,7 +511,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":6}],5:[function(require,module,exports){
+},{"./isPlainObject":8}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -308,7 +543,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":9}],6:[function(require,module,exports){
+},{"inherits":12}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -341,7 +576,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],7:[function(require,module,exports){
+},{}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -469,7 +704,7 @@ function request(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":4}],8:[function(require,module,exports){
+},{"./extend":6}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -588,7 +823,310 @@ function animationEnd() {
     return false;
 }
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      }
+      throw TypeError('Uncaught, unspecified "error" event.');
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        len = arguments.length;
+        args = new Array(len - 1);
+        for (i = 1; i < len; i++)
+          args[i - 1] = arguments[i];
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    len = arguments.length;
+    args = new Array(len - 1);
+    for (i = 1; i < len; i++)
+      args[i - 1] = arguments[i];
+
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    var m;
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  var ret;
+  if (!emitter._events || !emitter._events[type])
+    ret = 0;
+  else if (isFunction(emitter._events[type]))
+    ret = 1;
+  else
+    ret = emitter._events[type].length;
+  return ret;
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],12:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -613,7 +1151,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],10:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -636,6 +1174,10 @@ var _modulesInherits = require('./modules/inherits');
 
 var _modulesInherits2 = _interopRequireDefault(_modulesInherits);
 
+var _modulesEventEmitter = require('./modules/eventEmitter');
+
+var _modulesEventEmitter2 = _interopRequireDefault(_modulesEventEmitter);
+
 var _modulesRequest = require('./modules/request');
 
 var _modulesRequest2 = _interopRequireDefault(_modulesRequest);
@@ -652,15 +1194,25 @@ var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
 var _modulesCookies = require('./modules/cookies');
 
+var _modulesDomEvents = require('./modules/domEvents');
+
 var tiny = {
     clone: _modulesClone2['default'],
     extend: _modulesExtend2['default'],
     inherits: _modulesInherits2['default'],
+    EventEmitter: _modulesEventEmitter2['default'],
     request: _modulesRequest2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
-    cookies: _modulesCookies.cookies
+    cookies: _modulesCookies.cookies,
+    Event: _modulesDomEvents.domEvents.Event,
+    on: _modulesDomEvents.domEvents.on,
+    bind: _modulesDomEvents.domEvents.on,
+    one: _modulesDomEvents.domEvents.one,
+    once: _modulesDomEvents.domEvents.one,
+    off: _modulesDomEvents.domEvents.off,
+    trigger: _modulesDomEvents.domEvents.trigger
 };
 
 if (typeof window !== 'undefined') {
@@ -670,4 +1222,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/extend":4,"./modules/inherits":5,"./modules/isPlainObject":6,"./modules/request":7,"./modules/support":8}]},{},[10]);
+},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/domEvents":4,"./modules/eventEmitter":5,"./modules/extend":6,"./modules/inherits":7,"./modules/isPlainObject":8,"./modules/request":9,"./modules/support":10}]},{},[13]);
