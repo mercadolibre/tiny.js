@@ -1,8 +1,8 @@
-import request from '../modules/request';
+import ajax from '../modules/ajax';
 
-describe('tiny.request', () => {
+describe('tiny.ajax', () => {
     it('is should just to be defined', () => {
-        expect(request).to.exist;
+        expect(ajax).to.exist;
     });
 
     it('is should make a GET request', (done) => {
@@ -19,7 +19,7 @@ describe('tiny.request', () => {
         let error = chai.spy();
         let complete = chai.spy(completeCallback);
 
-        request('mock/sites.json', {
+        ajax('mock/sites.json', {
             success,
             error,
             complete,
@@ -40,7 +40,7 @@ describe('tiny.request', () => {
         let error = chai.spy();
         let complete = chai.spy(completeCallback);
 
-        request('mock/sites.json', {
+        ajax('mock/sites.json', {
             success,
             error,
             complete,

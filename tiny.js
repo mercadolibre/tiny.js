@@ -2,7 +2,7 @@ import clone from './modules/clone';
 import extend from './modules/extend';
 import inherits from './modules/inherits';
 import EventEmitter from './modules/eventEmitter';
-import request from './modules/request';
+import ajax from './modules/ajax';
 import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
 import classList from './modules/classList';
@@ -14,7 +14,7 @@ let tiny = {
     extend,
     inherits,
     EventEmitter,
-    request,
+    ajax,
     isPlainObject,
     support,
     classList,

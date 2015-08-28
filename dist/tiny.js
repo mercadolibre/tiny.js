@@ -1,4 +1,132 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = ajax;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _extend = require('./extend');
+
+var _extend2 = _interopRequireDefault(_extend);
+
+function ajax(url, settings) {
+    var args = arguments;
+    var opts = undefined;
+
+    settings = args.length === 1 ? args[0] : args[1];
+
+    var noop = function noop() {};
+
+    var defaults = {
+        url: args.length === 2 && typeof url === 'string' ? url : '.',
+        cache: true,
+        data: {},
+        headers: {},
+        context: null,
+        dataType: 'text',
+        method: 'GET',
+        success: noop,
+        error: noop,
+        complete: noop
+    };
+
+    opts = (0, _extend2['default'])(defaults, settings || {});
+
+    var mimeTypes = {
+        'application/json': 'json',
+        'text/html': 'html',
+        'text/plain': 'text'
+    };
+
+    var dataTypes = {};
+    for (var type in mimeTypes) {
+        if (mimeTypes.hasOwnProperty(type)) {
+            dataTypes[mimeTypes[type]] = type;
+        }
+    }
+
+    if (!opts.cache) {
+        opts.url = opts.url + (opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
+    }
+
+    var complete = function complete(status, xhr) {
+        opts.complete.call(opts.context, xhr, status);
+    };
+
+    var success = function success(data, xhr) {
+        var status = 'success';
+        opts.success.call(opts.context, data, status, xhr);
+        complete(status, xhr);
+    };
+
+    var error = function error(_error, status, xhr) {
+        opts.error.call(opts.context, xhr, status, _error);
+        complete(status, xhr);
+    };
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var result = undefined;
+            var _status = xhr.status === 1223 ? 204 : xhr.status;
+
+            if (_status >= 200 && _status < 300 || _status === 304) {
+                var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
+                var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+                result = xhr.responseText;
+
+                if (dataType === 'json') {
+                    try {
+                        result = JSON.parse(result);
+                    } catch (e) {
+                        result = xhr.responseText;
+                    }
+                }
+
+                success(result, xhr, opts);
+            } else {
+                error(new Error(xhr.statusText), 'error', xhr, opts);
+            }
+
+            return;
+        }
+    };
+
+    xhr.onerror = function () {
+        error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
+    };
+
+    xhr.open(opts.method, opts.url);
+
+    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
+        opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
+    }
+
+    if (opts.method === 'POST') {
+        opts.headers = (0, _extend2['default'])(opts.headers, {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded'
+        });
+    }
+
+    for (var key in opts.headers) {
+        xhr.setRequestHeader(key, opts.headers[key]);
+    }
+
+    xhr.send(opts.data);
+
+    return this;
+}
+
+module.exports = exports['default'];
+
+},{"./extend":7}],2:[function(require,module,exports){
 /**
  * Add or remove class
  *
@@ -49,7 +177,7 @@ function classList(el) {
 
 module.exports = exports['default'];
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -76,7 +204,7 @@ function clone(obj) {
 
 module.exports = exports['default'];
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -189,7 +317,7 @@ function encodeCookie(value) {
     });
 }
 
-},{"./isPlainObject":8}],4:[function(require,module,exports){
+},{"./isPlainObject":9}],5:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -392,7 +520,7 @@ var domEvents = {
 };
 exports.domEvents = domEvents;
 
-},{"./extend":6,"./isPlainObject":8}],5:[function(require,module,exports){
+},{"./extend":7,"./isPlainObject":9}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -424,7 +552,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":11}],6:[function(require,module,exports){
+},{"events":11}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -511,7 +639,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":8}],7:[function(require,module,exports){
+},{"./isPlainObject":9}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -543,7 +671,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":12}],8:[function(require,module,exports){
+},{"inherits":12}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -576,135 +704,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-exports['default'] = request;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
-
-var _extend = require('./extend');
-
-var _extend2 = _interopRequireDefault(_extend);
-
-function request(url, settings) {
-    var args = arguments;
-    var opts = undefined;
-
-    settings = args.length === 1 ? args[0] : args[1];
-
-    var noop = function noop() {};
-
-    var defaults = {
-        url: args.length === 2 && typeof url === 'string' ? url : '.',
-        cache: true,
-        data: {},
-        headers: {},
-        context: null,
-        dataType: 'text',
-        method: 'GET',
-        success: noop,
-        error: noop,
-        complete: noop
-    };
-
-    opts = (0, _extend2['default'])(defaults, settings || {});
-
-    var mimeTypes = {
-        'application/json': 'json',
-        'text/html': 'html',
-        'text/plain': 'text'
-    };
-
-    var dataTypes = {};
-    for (var type in mimeTypes) {
-        if (mimeTypes.hasOwnProperty(type)) {
-            dataTypes[mimeTypes[type]] = type;
-        }
-    }
-
-    if (!opts.cache) {
-        opts.url = opts.url + (opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
-    }
-
-    var complete = function complete(status, xhr) {
-        opts.complete.call(opts.context, xhr, status);
-    };
-
-    var success = function success(data, xhr) {
-        var status = 'success';
-        opts.success.call(opts.context, data, status, xhr);
-        complete(status, xhr);
-    };
-
-    var error = function error(_error, status, xhr) {
-        opts.error.call(opts.context, xhr, status, _error);
-        complete(status, xhr);
-    };
-
-    var xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            var result = undefined;
-            var _status = xhr.status === 1223 ? 204 : xhr.status;
-
-            if (_status >= 200 && _status < 300 || _status === 304) {
-                var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
-                var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
-                result = xhr.responseText;
-
-                if (dataType === 'json') {
-                    try {
-                        result = JSON.parse(result);
-                    } catch (e) {
-                        result = xhr.responseText;
-                    }
-                }
-
-                success(result, xhr, opts);
-            } else {
-                error(new Error(xhr.statusText), 'error', xhr, opts);
-            }
-
-            return;
-        }
-    };
-
-    xhr.onerror = function () {
-        error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
-    };
-
-    xhr.open(opts.method, opts.url);
-
-    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
-        opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
-    }
-
-    if (opts.method === 'POST') {
-        opts.headers = (0, _extend2['default'])(opts.headers, {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-type': 'application/x-www-form-urlencoded'
-        });
-    }
-
-    for (var key in opts.headers) {
-        xhr.setRequestHeader(key, opts.headers[key]);
-    }
-
-    xhr.send(opts.data);
-
-    return this;
-}
-
-module.exports = exports['default'];
-
-},{"./extend":6}],10:[function(require,module,exports){
+},{}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1178,9 +1178,9 @@ var _modulesEventEmitter = require('./modules/eventEmitter');
 
 var _modulesEventEmitter2 = _interopRequireDefault(_modulesEventEmitter);
 
-var _modulesRequest = require('./modules/request');
+var _modulesAjax = require('./modules/ajax');
 
-var _modulesRequest2 = _interopRequireDefault(_modulesRequest);
+var _modulesAjax2 = _interopRequireDefault(_modulesAjax);
 
 var _modulesIsPlainObject = require('./modules/isPlainObject');
 
@@ -1201,7 +1201,7 @@ var tiny = {
     extend: _modulesExtend2['default'],
     inherits: _modulesInherits2['default'],
     EventEmitter: _modulesEventEmitter2['default'],
-    request: _modulesRequest2['default'],
+    ajax: _modulesAjax2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
@@ -1222,4 +1222,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/domEvents":4,"./modules/eventEmitter":5,"./modules/extend":6,"./modules/inherits":7,"./modules/isPlainObject":8,"./modules/request":9,"./modules/support":10}]},{},[13]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/domEvents":5,"./modules/eventEmitter":6,"./modules/extend":7,"./modules/inherits":8,"./modules/isPlainObject":9,"./modules/support":10}]},{},[13]);
