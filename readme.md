@@ -84,7 +84,7 @@ The most relevant methods:
 
 **[WIP]**
 
-**See the [external module](https://www.npmjs.com/package/events) and the [docs](https://nodejs.org/api/events.html) for a complete reference.**
+**See the [external module](https://www.npmjs.com/package/events) and the [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter) for a complete reference.**
 
 ### `tiny.DOMEvents`
 
