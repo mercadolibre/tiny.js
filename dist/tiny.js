@@ -149,21 +149,21 @@ function classList(el) {
     var isClassList = el.classList;
 
     return {
-        'add': function add(className) {
+        add: function add(className) {
             if (isClassList) {
                 el.classList.add(className);
             } else {
                 el.setAttribute('class', el.getAttribute('class') + ' ' + className);
             }
         },
-        'remove': function remove(className) {
+        remove: function remove(className) {
             if (isClassList) {
                 el.classList.remove(className);
             } else {
                 el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
             }
         },
-        'contains': function contains(className) {
+        contains: function contains(className) {
             var exist;
             if (isClassList) {
                 exist = el.classList.contains(className);
@@ -325,7 +325,7 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.initEvent = initEvent;
 exports.on = on;
-exports.one = one;
+exports.once = once;
 exports.off = off;
 exports.trigger = trigger;
 
@@ -448,10 +448,10 @@ function on(elem, event, handler, bubbles) {
  * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
  *
  * @example
- * tiny.one(document, 'click', function(e){}, false);
+ * tiny.once(document, 'click', function(e){}, false);
  */
 
-function one(elem, event, handler, bubbles) {
+function once(elem, event, handler, bubbles) {
     getElements(elem).forEach(function (el) {
         var origHandler = handler;
 
@@ -512,13 +512,13 @@ function trigger(elem, event, props) {
     });
 }
 
-var domEvents = {
+var DOMEvents = {
     on: on,
-    one: one,
+    once: once,
     off: off,
     trigger: trigger
 };
-exports.domEvents = domEvents;
+exports.DOMEvents = DOMEvents;
 
 },{"./extend":7,"./isPlainObject":9}],6:[function(require,module,exports){
 'use strict';
@@ -552,7 +552,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":11}],7:[function(require,module,exports){
+},{"events":12}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -671,7 +671,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":12}],9:[function(require,module,exports){
+},{"inherits":13}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -705,6 +705,123 @@ function isPlainObject(obj) {
 module.exports = exports['default'];
 
 },{}],10:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = jsonp;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _extend = require('./extend');
+
+var _extend2 = _interopRequireDefault(_extend);
+
+var noop = function noop() {};
+
+// document.head is not available in IE<9
+var head = document.getElementsByTagName('head')[0];
+
+var jsonpCount = 0;
+
+/**
+ * JSONP handler
+ *
+ * @memberof tiny
+ * @method
+ * @param {String} url
+ * @param {Object} [opts] Optional opts.
+ * @param {String} [opts.prefix] Callback prefix. Default: `__jsonp`
+ * @param {String} [opts.param] QS parameter. Default: `callback`
+ * @param {String|Function} [opts.name] The name of the callback function that
+ *   receives the result. Default: `opts.prefix${increment}`
+ * @param {Number} [opts.timeout] How long after the request until a timeout
+ *   error will occur. Default: 15000
+ *
+ * @returns {Function} Returns a cancel function
+ *
+ * @example
+ * var cancel = tiny.jsonp('http://suggestgz.mlapps.com/sites/MLA/autosuggest?q=smartphone&v=1', {timeout: 5000});
+ * if (something) {
+ *   cancel();
+ * }
+ */
+
+function jsonp(url, settings) {
+    var id = undefined,
+        script = undefined,
+        timer = undefined,
+        cleanup = undefined,
+        cancel = undefined;
+
+    var opts = (0, _extend2['default'])({
+        prefix: '__jsonp',
+        param: 'callback',
+        timeout: 15000,
+        success: noop,
+        error: noop
+    }, settings);
+
+    // Generate an unique id for the request.
+    jsonpCount++;
+    id = opts.name ? typeof opts.name === 'function' ? opts.name(opts.prefix, jsonpCount) : opts.name : opts.prefix + jsonpCount++;
+
+    cleanup = function () {
+        // Remove the script tag.
+        if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
+        }
+
+        // Don't delete the jsonp handler from window to not generate an error
+        // when script will be loaded after cleaning
+        window[id] = noop;
+
+        if (timer) {
+            clearTimeout(timer);
+        }
+    };
+
+    if (opts.timeout) {
+        timer = setTimeout(function () {
+            cleanup();
+            opts.error(new Error('Script loading timeout'));
+        }, opts.timeout);
+    }
+
+    window[id] = function (data) {
+        cleanup();
+        opts.success(data);
+    };
+
+    // Add querystring component
+    url += (~url.indexOf('?') ? '&' : '?') + opts.param + '=' + encodeURIComponent(id);
+    url = url.replace('?&', '?');
+
+    // Create script element
+    script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    script.onerror = function (e) {
+        cleanup();
+        opts.error(new Error(e.message || 'Script Error'));
+    };
+    head.appendChild(script);
+
+    cancel = function () {
+        if (window[id]) {
+            cleanup();
+        }
+    };
+
+    return cancel;
+}
+
+module.exports = exports['default'];
+
+},{"./extend":7}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -823,7 +940,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],11:[function(require,module,exports){
+},{}],12:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1126,7 +1243,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1151,7 +1268,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1182,6 +1299,10 @@ var _modulesAjax = require('./modules/ajax');
 
 var _modulesAjax2 = _interopRequireDefault(_modulesAjax);
 
+var _modulesJsonp = require('./modules/jsonp');
+
+var _modulesJsonp2 = _interopRequireDefault(_modulesJsonp);
+
 var _modulesIsPlainObject = require('./modules/isPlainObject');
 
 var _modulesIsPlainObject2 = _interopRequireDefault(_modulesIsPlainObject);
@@ -1202,17 +1323,17 @@ var tiny = {
     inherits: _modulesInherits2['default'],
     EventEmitter: _modulesEventEmitter2['default'],
     ajax: _modulesAjax2['default'],
+    jsonp: _modulesJsonp2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
     cookies: _modulesCookies.cookies,
-    Event: _modulesDomEvents.domEvents.Event,
-    on: _modulesDomEvents.domEvents.on,
-    bind: _modulesDomEvents.domEvents.on,
-    one: _modulesDomEvents.domEvents.one,
-    once: _modulesDomEvents.domEvents.one,
-    off: _modulesDomEvents.domEvents.off,
-    trigger: _modulesDomEvents.domEvents.trigger
+    on: _modulesDomEvents.DOMEvents.on,
+    bind: _modulesDomEvents.DOMEvents.on,
+    one: _modulesDomEvents.DOMEvents.once,
+    once: _modulesDomEvents.DOMEvents.once,
+    off: _modulesDomEvents.DOMEvents.off,
+    trigger: _modulesDomEvents.DOMEvents.trigger
 };
 
 if (typeof window !== 'undefined') {
@@ -1222,4 +1343,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/domEvents":5,"./modules/eventEmitter":6,"./modules/extend":7,"./modules/inherits":8,"./modules/isPlainObject":9,"./modules/support":10}]},{},[13]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/domEvents":5,"./modules/eventEmitter":6,"./modules/extend":7,"./modules/inherits":8,"./modules/isPlainObject":9,"./modules/jsonp":10,"./modules/support":11}]},{},[14]);

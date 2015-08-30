@@ -3,6 +3,7 @@ import extend from './modules/extend';
 import inherits from './modules/inherits';
 import EventEmitter from './modules/eventEmitter';
 import ajax from './modules/ajax';
+import jsonp from './modules/jsonp';
 import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
 import classList from './modules/classList';
@@ -15,6 +16,7 @@ let tiny = {
     inherits,
     EventEmitter,
     ajax,
+    jsonp,
     isPlainObject,
     support,
     classList,

@@ -131,6 +131,20 @@ Performs an asynchronous HTTP (Ajax) request.
     - `success`: **[WIP]**
     - `error`: **[WIP]**
     - `complete`: **[WIP]**
+    
+### `tiny.jsonp(url, settings, callback)`
+
+Performs a JSONP request
+
+- `url`: type `String`. The URL of the requested resource.
+- `settings`: type `Object`. Optional.
+    - `prefix`: type `String`. Prefix for the callback functions that handle JSONP responses. Default: `"__jsonp"`
+    - `name`: type `String|Function`. A name of the callback function that handle JSONP response. 
+        Can be a function that receives the prefix and the request id (increment). Default: `settings.prefix + increment`
+    - `param`: type `String`. A name of the query string parameter. Default: `"callback"`
+    - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
+    - `success`: type `Function`. Success callback function.
+    - `error`: type `Function`. Error callback function.
 
 ### `tiny.support`
 
