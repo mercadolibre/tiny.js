@@ -53,7 +53,7 @@ function getElements(el) {
     if (typeof el === 'string') {
         return [].slice.call(document.querySelectorAll(el));
     } else if (el.length) {
-        [].slice.call(el);
+        return [].slice.call(el);
     } else {
         return [el];
     }
