@@ -126,7 +126,7 @@ function ajax(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":7}],2:[function(require,module,exports){
+},{"./extend":8}],2:[function(require,module,exports){
 /**
  * Add or remove class
  *
@@ -317,7 +317,79 @@ function encodeCookie(value) {
     });
 }
 
-},{"./isPlainObject":9}],5:[function(require,module,exports){
+},{"./isPlainObject":10}],5:[function(require,module,exports){
+/**
+ * Get the value of a computed style for the first element in set of
+ * matched elements or set one or more CSS properties for every matched element.
+ *
+ * @memberof tiny
+ * @param {String|HTMLElement} elem CSS selector or an HTML Element
+ * @param {String|Object} key A CSS property or a map of <property, value> when used as setter.
+ * @param {Sreing} value A value to set for the property
+ *
+ * @returns {String|Void}
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = css;
+
+function css(elem, key, value) {
+    var args = arguments,
+        elements = getElements(elem),
+        length = elements.length,
+        setter;
+
+    // Get attribute
+    if (typeof key === 'string' && args.length === 2) {
+        return length === 0 ? '' : getElStyle(elements[0], key);
+    }
+
+    // Set attributes
+    if (args.length === 3) {
+        setter = function (el) {
+            el.style[key] = value;
+        };
+    } else if (typeof key === 'object') {
+        setter = function (el) {
+            Object.keys(key).forEach(function (name) {
+                el.style[name] = key[name];
+            });
+        };
+    }
+
+    for (var i = 0; i < length; i++) {
+        setter(elements[i]);
+    }
+}
+
+function getElStyle(el, prop) {
+    if (window.getComputedStyle) {
+        return window.getComputedStyle(el, null).getPropertyValue(prop);
+        // IE
+    } else {
+            // Turn style name into camel notation
+            prop = prop.replace(/\-(\w)/g, function (str, $1) {
+                return $1.toUpperCase();
+            });
+            return el.currentStyle[prop];
+        }
+}
+
+function getElements(el) {
+    if (typeof el === 'string') {
+        return [].slice.call(document.querySelectorAll(el));
+    } else if (el.length) {
+        [].slice.call(el);
+    } else {
+        return [el];
+    }
+}
+module.exports = exports['default'];
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -520,7 +592,7 @@ var DOMEvents = {
 };
 exports.DOMEvents = DOMEvents;
 
-},{"./extend":7,"./isPlainObject":9}],6:[function(require,module,exports){
+},{"./extend":8,"./isPlainObject":10}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -552,7 +624,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":12}],7:[function(require,module,exports){
+},{"events":13}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -639,7 +711,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":9}],8:[function(require,module,exports){
+},{"./isPlainObject":10}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -671,7 +743,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":13}],9:[function(require,module,exports){
+},{"inherits":14}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -704,7 +776,7 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],10:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -821,7 +893,7 @@ function jsonp(url, settings) {
 
 module.exports = exports['default'];
 
-},{"./extend":7}],11:[function(require,module,exports){
+},{"./extend":8}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -940,7 +1012,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1243,7 +1315,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],13:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1268,7 +1340,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1313,6 +1385,10 @@ var _modulesClassList = require('./modules/classList');
 
 var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
+var _modulesCss = require('./modules/css');
+
+var _modulesCss2 = _interopRequireDefault(_modulesCss);
+
 var _modulesCookies = require('./modules/cookies');
 
 var _modulesDomEvents = require('./modules/domEvents');
@@ -1327,6 +1403,7 @@ var tiny = {
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
+    css: _modulesCss2['default'],
     cookies: _modulesCookies.cookies,
     on: _modulesDomEvents.DOMEvents.on,
     bind: _modulesDomEvents.DOMEvents.on,
@@ -1343,4 +1420,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/domEvents":5,"./modules/eventEmitter":6,"./modules/extend":7,"./modules/inherits":8,"./modules/isPlainObject":9,"./modules/jsonp":10,"./modules/support":11}]},{},[14]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/support":12}]},{},[15]);

@@ -7,6 +7,7 @@ import jsonp from './modules/jsonp';
 import isPlainObject from './modules/isPlainObject';
 import { support } from './modules/support';
 import classList from './modules/classList';
+import css from './modules/css';
 import { cookies } from './modules/cookies';
 import { DOMEvents } from './modules/domEvents';
 
@@ -20,6 +21,7 @@ let tiny = {
     isPlainObject,
     support,
     classList,
+    css,
     cookies,
     on: DOMEvents.on,
     bind: DOMEvents.on,

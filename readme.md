@@ -116,6 +116,15 @@ tiny.classList(document.body).add('example');
 tiny.classList(document.body).contains('example'); // => true
 ```
 
+### `tiny.css(el, key[, value])`
+
+Get the value of a computed style for the first element in set of
+  matched elements or set one or more CSS properties for every matched element.
+  
+- `el`: An `HTMLElement` or a valid CSS selector.
+- `key`: **[WIP]**
+- `value`: **[WIP]**
+
 ### `tiny.ajax(url, settings)`
 
 Performs an asynchronous HTTP (Ajax) request.
