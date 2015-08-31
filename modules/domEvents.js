@@ -30,7 +30,7 @@ function getElements(el) {
     if (typeof el === 'string') {
         return [].slice.call(document.querySelectorAll(el));
     } else if (el.length) {
-        [].slice.call(el);
+        return [].slice.call(el);
     } else {
         return [el];
     }
@@ -108,9 +108,9 @@ export function on(elem, event, handler, bubbles) {
  * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
  *
  * @example
- * tiny.one(document, 'click', function(e){}, false);
+ * tiny.once(document, 'click', function(e){}, false);
  */
-export function one(elem, event, handler, bubbles) {
+export function once(elem, event, handler, bubbles) {
     getElements(elem).forEach((el) => {
         let origHandler = handler;
 
@@ -167,9 +167,9 @@ export function trigger(elem, event, props) {
     });
 }
 
-export var domEvents = {
+export var DOMEvents = {
     on,
-    one,
+    once,
     off,
     trigger
 };

@@ -1,4 +1,132 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = ajax;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _extend = require('./extend');
+
+var _extend2 = _interopRequireDefault(_extend);
+
+function ajax(url, settings) {
+    var args = arguments;
+    var opts = undefined;
+
+    settings = args.length === 1 ? args[0] : args[1];
+
+    var noop = function noop() {};
+
+    var defaults = {
+        url: args.length === 2 && typeof url === 'string' ? url : '.',
+        cache: true,
+        data: {},
+        headers: {},
+        context: null,
+        dataType: 'text',
+        method: 'GET',
+        success: noop,
+        error: noop,
+        complete: noop
+    };
+
+    opts = (0, _extend2['default'])(defaults, settings || {});
+
+    var mimeTypes = {
+        'application/json': 'json',
+        'text/html': 'html',
+        'text/plain': 'text'
+    };
+
+    var dataTypes = {};
+    for (var type in mimeTypes) {
+        if (mimeTypes.hasOwnProperty(type)) {
+            dataTypes[mimeTypes[type]] = type;
+        }
+    }
+
+    if (!opts.cache) {
+        opts.url = opts.url + (opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
+    }
+
+    var complete = function complete(status, xhr) {
+        opts.complete.call(opts.context, xhr, status);
+    };
+
+    var success = function success(data, xhr) {
+        var status = 'success';
+        opts.success.call(opts.context, data, status, xhr);
+        complete(status, xhr);
+    };
+
+    var error = function error(_error, status, xhr) {
+        opts.error.call(opts.context, xhr, status, _error);
+        complete(status, xhr);
+    };
+
+    var xhr = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function () {
+        if (xhr.readyState === 4) {
+            var result = undefined;
+            var _status = xhr.status === 1223 ? 204 : xhr.status;
+
+            if (_status >= 200 && _status < 300 || _status === 304) {
+                var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
+                var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+                result = xhr.responseText;
+
+                if (dataType === 'json') {
+                    try {
+                        result = JSON.parse(result);
+                    } catch (e) {
+                        result = xhr.responseText;
+                    }
+                }
+
+                success(result, xhr, opts);
+            } else {
+                error(new Error(xhr.statusText), 'error', xhr, opts);
+            }
+
+            return;
+        }
+    };
+
+    xhr.onerror = function () {
+        error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
+    };
+
+    xhr.open(opts.method, opts.url);
+
+    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
+        opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
+    }
+
+    if (opts.method === 'POST') {
+        opts.headers = (0, _extend2['default'])(opts.headers, {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-type': 'application/x-www-form-urlencoded'
+        });
+    }
+
+    for (var key in opts.headers) {
+        xhr.setRequestHeader(key, opts.headers[key]);
+    }
+
+    xhr.send(opts.data);
+
+    return this;
+}
+
+module.exports = exports['default'];
+
+},{"./extend":8}],2:[function(require,module,exports){
 /**
  * Add or remove class
  *
@@ -21,21 +149,21 @@ function classList(el) {
     var isClassList = el.classList;
 
     return {
-        'add': function add(className) {
+        add: function add(className) {
             if (isClassList) {
                 el.classList.add(className);
             } else {
                 el.setAttribute('class', el.getAttribute('class') + ' ' + className);
             }
         },
-        'remove': function remove(className) {
+        remove: function remove(className) {
             if (isClassList) {
                 el.classList.remove(className);
             } else {
                 el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
             }
         },
-        'contains': function contains(className) {
+        contains: function contains(className) {
             var exist;
             if (isClassList) {
                 exist = el.classList.contains(className);
@@ -49,7 +177,7 @@ function classList(el) {
 
 module.exports = exports['default'];
 
-},{}],2:[function(require,module,exports){
+},{}],3:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -76,7 +204,7 @@ function clone(obj) {
 
 module.exports = exports['default'];
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -189,7 +317,79 @@ function encodeCookie(value) {
     });
 }
 
-},{"./isPlainObject":8}],4:[function(require,module,exports){
+},{"./isPlainObject":10}],5:[function(require,module,exports){
+/**
+ * Get the value of a computed style for the first element in set of
+ * matched elements or set one or more CSS properties for every matched element.
+ *
+ * @memberof tiny
+ * @param {String|HTMLElement} elem CSS selector or an HTML Element
+ * @param {String|Object} key A CSS property or a map of <property, value> when used as setter.
+ * @param {Sreing} value A value to set for the property
+ *
+ * @returns {String|Void}
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = css;
+
+function css(elem, key, value) {
+    var args = arguments,
+        elements = getElements(elem),
+        length = elements.length,
+        setter;
+
+    // Get attribute
+    if (typeof key === 'string' && args.length === 2) {
+        return length === 0 ? '' : getElStyle(elements[0], key);
+    }
+
+    // Set attributes
+    if (args.length === 3) {
+        setter = function (el) {
+            el.style[key] = value;
+        };
+    } else if (typeof key === 'object') {
+        setter = function (el) {
+            Object.keys(key).forEach(function (name) {
+                el.style[name] = key[name];
+            });
+        };
+    }
+
+    for (var i = 0; i < length; i++) {
+        setter(elements[i]);
+    }
+}
+
+function getElStyle(el, prop) {
+    if (window.getComputedStyle) {
+        return window.getComputedStyle(el, null).getPropertyValue(prop);
+        // IE
+    } else {
+            // Turn style name into camel notation
+            prop = prop.replace(/\-(\w)/g, function (str, $1) {
+                return $1.toUpperCase();
+            });
+            return el.currentStyle[prop];
+        }
+}
+
+function getElements(el) {
+    if (typeof el === 'string') {
+        return [].slice.call(document.querySelectorAll(el));
+    } else if (el.length) {
+        return [].slice.call(el);
+    } else {
+        return [el];
+    }
+}
+module.exports = exports['default'];
+
+},{}],6:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -197,7 +397,7 @@ Object.defineProperty(exports, '__esModule', {
 });
 exports.initEvent = initEvent;
 exports.on = on;
-exports.one = one;
+exports.once = once;
 exports.off = off;
 exports.trigger = trigger;
 
@@ -241,7 +441,7 @@ function getElements(el) {
     if (typeof el === 'string') {
         return [].slice.call(document.querySelectorAll(el));
     } else if (el.length) {
-        [].slice.call(el);
+        return [].slice.call(el);
     } else {
         return [el];
     }
@@ -320,10 +520,10 @@ function on(elem, event, handler, bubbles) {
  * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
  *
  * @example
- * tiny.one(document, 'click', function(e){}, false);
+ * tiny.once(document, 'click', function(e){}, false);
  */
 
-function one(elem, event, handler, bubbles) {
+function once(elem, event, handler, bubbles) {
     getElements(elem).forEach(function (el) {
         var origHandler = handler;
 
@@ -384,15 +584,15 @@ function trigger(elem, event, props) {
     });
 }
 
-var domEvents = {
+var DOMEvents = {
     on: on,
-    one: one,
+    once: once,
     off: off,
     trigger: trigger
 };
-exports.domEvents = domEvents;
+exports.DOMEvents = DOMEvents;
 
-},{"./extend":6,"./isPlainObject":8}],5:[function(require,module,exports){
+},{"./extend":8,"./isPlainObject":10}],7:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -424,7 +624,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":11}],6:[function(require,module,exports){
+},{"events":13}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -511,7 +711,7 @@ function extend() {
 
 module.exports = exports['default'];
 
-},{"./isPlainObject":8}],7:[function(require,module,exports){
+},{"./isPlainObject":10}],9:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -543,7 +743,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":12}],8:[function(require,module,exports){
+},{"inherits":14}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -576,13 +776,13 @@ function isPlainObject(obj) {
 
 module.exports = exports['default'];
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
-exports['default'] = request;
+exports['default'] = jsonp;
 
 function _interopRequireDefault(obj) {
     return obj && obj.__esModule ? obj : { 'default': obj };
@@ -592,119 +792,108 @@ var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
 
-function request(url, settings) {
-    var args = arguments;
-    var opts = undefined;
+var noop = function noop() {};
 
-    settings = args.length === 1 ? args[0] : args[1];
+// document.head is not available in IE<9
+var head = document.getElementsByTagName('head')[0];
 
-    var noop = function noop() {};
+var jsonpCount = 0;
 
-    var defaults = {
-        url: args.length === 2 && typeof url === 'string' ? url : '.',
-        cache: true,
-        data: {},
-        headers: {},
-        context: null,
-        dataType: 'text',
-        method: 'GET',
+/**
+ * JSONP handler
+ *
+ * @memberof tiny
+ * @method
+ * @param {String} url
+ * @param {Object} [opts] Optional opts.
+ * @param {String} [opts.prefix] Callback prefix. Default: `__jsonp`
+ * @param {String} [opts.param] QS parameter. Default: `callback`
+ * @param {String|Function} [opts.name] The name of the callback function that
+ *   receives the result. Default: `opts.prefix${increment}`
+ * @param {Number} [opts.timeout] How long after the request until a timeout
+ *   error will occur. Default: 15000
+ *
+ * @returns {Function} Returns a cancel function
+ *
+ * @example
+ * var cancel = tiny.jsonp('http://suggestgz.mlapps.com/sites/MLA/autosuggest?q=smartphone&v=1', {timeout: 5000});
+ * if (something) {
+ *   cancel();
+ * }
+ */
+
+function jsonp(url, settings) {
+    var id = undefined,
+        script = undefined,
+        timer = undefined,
+        cleanup = undefined,
+        cancel = undefined;
+
+    var opts = (0, _extend2['default'])({
+        prefix: '__jsonp',
+        param: 'callback',
+        timeout: 15000,
         success: noop,
-        error: noop,
-        complete: noop
-    };
+        error: noop
+    }, settings);
 
-    opts = (0, _extend2['default'])(defaults, settings || {});
+    // Generate an unique id for the request.
+    jsonpCount++;
+    id = opts.name ? typeof opts.name === 'function' ? opts.name(opts.prefix, jsonpCount) : opts.name : opts.prefix + jsonpCount++;
 
-    var mimeTypes = {
-        'application/json': 'json',
-        'text/html': 'html',
-        'text/plain': 'text'
-    };
-
-    var dataTypes = {};
-    for (var type in mimeTypes) {
-        if (mimeTypes.hasOwnProperty(type)) {
-            dataTypes[mimeTypes[type]] = type;
+    cleanup = function () {
+        // Remove the script tag.
+        if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
         }
-    }
 
-    if (!opts.cache) {
-        opts.url = opts.url + (opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
-    }
+        // Don't delete the jsonp handler from window to not generate an error
+        // when script will be loaded after cleaning
+        window[id] = noop;
 
-    var complete = function complete(status, xhr) {
-        opts.complete.call(opts.context, xhr, status);
-    };
-
-    var success = function success(data, xhr) {
-        var status = 'success';
-        opts.success.call(opts.context, data, status, xhr);
-        complete(status, xhr);
-    };
-
-    var error = function error(_error, status, xhr) {
-        opts.error.call(opts.context, xhr, status, _error);
-        complete(status, xhr);
-    };
-
-    var xhr = new XMLHttpRequest();
-
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
-            var result = undefined;
-            var _status = xhr.status === 1223 ? 204 : xhr.status;
-
-            if (_status >= 200 && _status < 300 || _status === 304) {
-                var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
-                var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
-                result = xhr.responseText;
-
-                if (dataType === 'json') {
-                    try {
-                        result = JSON.parse(result);
-                    } catch (e) {
-                        result = xhr.responseText;
-                    }
-                }
-
-                success(result, xhr, opts);
-            } else {
-                error(new Error(xhr.statusText), 'error', xhr, opts);
-            }
-
-            return;
+        if (timer) {
+            clearTimeout(timer);
         }
     };
 
-    xhr.onerror = function () {
-        error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
+    if (opts.timeout) {
+        timer = setTimeout(function () {
+            cleanup();
+            opts.error(new Error('Script loading timeout'));
+        }, opts.timeout);
+    }
+
+    window[id] = function (data) {
+        cleanup();
+        opts.success(data);
     };
 
-    xhr.open(opts.method, opts.url);
+    // Add querystring component
+    url += (~url.indexOf('?') ? '&' : '?') + opts.param + '=' + encodeURIComponent(id);
+    url = url.replace('?&', '?');
 
-    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
-        opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
-    }
+    // Create script element
+    script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    script.onerror = function (e) {
+        cleanup();
+        opts.error(new Error(e.message || 'Script Error'));
+    };
+    head.appendChild(script);
 
-    if (opts.method === 'POST') {
-        opts.headers = (0, _extend2['default'])(opts.headers, {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-type': 'application/x-www-form-urlencoded'
-        });
-    }
+    cancel = function () {
+        if (window[id]) {
+            cleanup();
+        }
+    };
 
-    for (var key in opts.headers) {
-        xhr.setRequestHeader(key, opts.headers[key]);
-    }
-
-    xhr.send(opts.data);
-
-    return this;
+    return cancel;
 }
 
 module.exports = exports['default'];
 
-},{"./extend":6}],10:[function(require,module,exports){
+},{"./extend":8}],12:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -823,7 +1012,7 @@ function animationEnd() {
     return false;
 }
 
-},{}],11:[function(require,module,exports){
+},{}],13:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1126,7 +1315,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],12:[function(require,module,exports){
+},{}],14:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1151,7 +1340,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1178,9 +1367,13 @@ var _modulesEventEmitter = require('./modules/eventEmitter');
 
 var _modulesEventEmitter2 = _interopRequireDefault(_modulesEventEmitter);
 
-var _modulesRequest = require('./modules/request');
+var _modulesAjax = require('./modules/ajax');
 
-var _modulesRequest2 = _interopRequireDefault(_modulesRequest);
+var _modulesAjax2 = _interopRequireDefault(_modulesAjax);
+
+var _modulesJsonp = require('./modules/jsonp');
+
+var _modulesJsonp2 = _interopRequireDefault(_modulesJsonp);
 
 var _modulesIsPlainObject = require('./modules/isPlainObject');
 
@@ -1192,6 +1385,10 @@ var _modulesClassList = require('./modules/classList');
 
 var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
 
+var _modulesCss = require('./modules/css');
+
+var _modulesCss2 = _interopRequireDefault(_modulesCss);
+
 var _modulesCookies = require('./modules/cookies');
 
 var _modulesDomEvents = require('./modules/domEvents');
@@ -1201,18 +1398,19 @@ var tiny = {
     extend: _modulesExtend2['default'],
     inherits: _modulesInherits2['default'],
     EventEmitter: _modulesEventEmitter2['default'],
-    request: _modulesRequest2['default'],
+    ajax: _modulesAjax2['default'],
+    jsonp: _modulesJsonp2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport.support,
     classList: _modulesClassList2['default'],
+    css: _modulesCss2['default'],
     cookies: _modulesCookies.cookies,
-    Event: _modulesDomEvents.domEvents.Event,
-    on: _modulesDomEvents.domEvents.on,
-    bind: _modulesDomEvents.domEvents.on,
-    one: _modulesDomEvents.domEvents.one,
-    once: _modulesDomEvents.domEvents.one,
-    off: _modulesDomEvents.domEvents.off,
-    trigger: _modulesDomEvents.domEvents.trigger
+    on: _modulesDomEvents.DOMEvents.on,
+    bind: _modulesDomEvents.DOMEvents.on,
+    one: _modulesDomEvents.DOMEvents.once,
+    once: _modulesDomEvents.DOMEvents.once,
+    off: _modulesDomEvents.DOMEvents.off,
+    trigger: _modulesDomEvents.DOMEvents.trigger
 };
 
 if (typeof window !== 'undefined') {
@@ -1222,4 +1420,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/classList":1,"./modules/clone":2,"./modules/cookies":3,"./modules/domEvents":4,"./modules/eventEmitter":5,"./modules/extend":6,"./modules/inherits":7,"./modules/isPlainObject":8,"./modules/request":9,"./modules/support":10}]},{},[13]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/support":12}]},{},[15]);

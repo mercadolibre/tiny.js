@@ -84,7 +84,7 @@ The most relevant methods:
 
 **[WIP]**
 
-**See the [external module](https://www.npmjs.com/package/events) and the [docs](https://nodejs.org/api/events.html) for a complete reference.**
+**See the [external module](https://www.npmjs.com/package/events) and the [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter) for a complete reference.**
 
 ### `tiny.DOMEvents`
 
@@ -116,6 +116,15 @@ tiny.classList(document.body).add('example');
 tiny.classList(document.body).contains('example'); // => true
 ```
 
+### `tiny.css(el, key[, value])`
+
+Get the value of a computed style for the first element in set of
+  matched elements or set one or more CSS properties for every matched element.
+  
+- `el`: An `HTMLElement` or a valid CSS selector.
+- `key`: **[WIP]**
+- `value`: **[WIP]**
+
 ### `tiny.ajax(url, settings)`
 
 Performs an asynchronous HTTP (Ajax) request.
@@ -131,6 +140,20 @@ Performs an asynchronous HTTP (Ajax) request.
     - `success`: **[WIP]**
     - `error`: **[WIP]**
     - `complete`: **[WIP]**
+    
+### `tiny.jsonp(url, settings, callback)`
+
+Performs a JSONP request
+
+- `url`: type `String`. The URL of the requested resource.
+- `settings`: type `Object`. Optional.
+    - `prefix`: type `String`. Prefix for the callback functions that handle JSONP responses. Default: `"__jsonp"`
+    - `name`: type `String|Function`. A name of the callback function that handle JSONP response. 
+        Can be a function that receives the prefix and the request id (increment). Default: `settings.prefix + increment`
+    - `param`: type `String`. A name of the query string parameter. Default: `"callback"`
+    - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
+    - `success`: type `Function`. Success callback function.
+    - `error`: type `Function`. Error callback function.
 
 ### `tiny.support`
 

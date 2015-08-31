@@ -1,6 +1,6 @@
 import extend from './extend';
 
-export default function request(url, settings) {
+export default function ajax(url, settings) {
     let args = arguments;
     let opts;
 

@@ -1,6 +1,6 @@
-import { domEvents } from '../modules/domEvents';
+import { DOMEvents } from '../modules/domEvents';
 
-describe('domEvents', () => {
+describe('DOMEvents', () => {
     let container = document.createElement('div');
     let button = document.createElement('button');
     let input;
@@ -23,8 +23,8 @@ describe('domEvents', () => {
     });
 
     it('should just to be defined', () => {
-        expect(domEvents).to.exist;
-        expect(domEvents).to.have.all.keys('on', 'one', 'off', 'trigger');
+        expect(DOMEvents).to.exist;
+        expect(DOMEvents).to.have.all.keys('on', 'once', 'off', 'trigger');
     });
 
     describe('#on', () => {
@@ -33,9 +33,9 @@ describe('domEvents', () => {
         let cb13 = chai.spy();
 
         it('should add event listener to an element', () => {
-            domEvents.on('button', 'click', cb11);
-            domEvents.on(button, 'click', cb12);
-            domEvents.on('#input', 'click', cb13);
+            DOMEvents.on('button', 'click', cb11);
+            DOMEvents.on(button, 'click', cb12);
+            DOMEvents.on('#input', 'click', cb13);
             click(button);
             click(input);
             expect(cb11).to.have.been.called.once;
@@ -50,13 +50,13 @@ describe('domEvents', () => {
         let cb23 = chai.spy();
 
         it('should remove event listener from an element', () => {
-            domEvents.on('button', 'click', cb21);
-            domEvents.on(button, 'click', cb22);
-            domEvents.on('#input', 'click', cb23);
+            DOMEvents.on('button', 'click', cb21);
+            DOMEvents.on(button, 'click', cb22);
+            DOMEvents.on('#input', 'click', cb23);
 
-            domEvents.off('button', 'click', cb21);
-            domEvents.off(button, 'click', cb22);
-            domEvents.off('#input', 'click', cb23);
+            DOMEvents.off('button', 'click', cb21);
+            DOMEvents.off(button, 'click', cb22);
+            DOMEvents.off('#input', 'click', cb23);
 
             click(button);
             click(input);
@@ -67,13 +67,13 @@ describe('domEvents', () => {
         });
     });
 
-    describe('#one', () => {
+    describe('#once', () => {
         let cb31 = chai.spy();
         let cb32 = chai.spy();
 
         it('should add event listener to an element that fires only once', () => {
-            domEvents.one(button, 'click', cb31);
-            domEvents.one(input, 'click', cb32);
+            DOMEvents.once(button, 'click', cb31);
+            DOMEvents.once(input, 'click', cb32);
             click(button);
             click(input);
             click(button);
@@ -89,16 +89,16 @@ describe('domEvents', () => {
         let cb43 = chai.spy();
 
         it('should trigger a handler by firing an event', () => {
-            domEvents.on(button, 'click', cb41);
-            domEvents.on('button', 'click', cb42);
-            domEvents.trigger(button, 'click');
+            DOMEvents.on(button, 'click', cb41);
+            DOMEvents.on('button', 'click', cb42);
+            DOMEvents.trigger(button, 'click');
 
             expect(cb41).to.have.been.called.once;
             expect(cb42).to.have.been.called.once;
 
-            domEvents.on(document.body, 'layoutchange', cb43);
-            domEvents.trigger(document.body, 'layoutchange');
-            domEvents.trigger(document.body, 'layoutchange');
+            DOMEvents.on(document.body, 'layoutchange', cb43);
+            DOMEvents.trigger(document.body, 'layoutchange');
+            DOMEvents.trigger(document.body, 'layoutchange');
 
             expect(cb43).to.have.been.called.twice;
         });

@@ -11,6 +11,7 @@ module.exports = function(config) {
         // list of files / patterns to load in the browser
         files: [
             {pattern: 'test/mock/*.json', watched: false, included: false},
+            {pattern: 'test/mock/*.jsonp', watched: false, included: false},
             {pattern: 'modules/*.js', watched: true, included: false},
             'test/**/*.spec.js'
         ],

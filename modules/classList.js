@@ -13,21 +13,21 @@ export default function classList(el) {
     const isClassList = el.classList;
 
     return {
-        'add': function add(className) {
+        add: function add(className) {
             if (isClassList) {
                 el.classList.add(className);
             } else {
                 el.setAttribute('class', el.getAttribute('class') + ' ' + className);
             }
         },
-        'remove': function remove(className) {
+        remove: function remove(className) {
             if (isClassList) {
                 el.classList.remove(className);
             } else {
                 el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
             }
         },
-        'contains': function contains(className) {
+        contains: function contains(className) {
             var exist;
             if (isClassList) {
                 exist = el.classList.contains(className);
