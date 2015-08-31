@@ -27,7 +27,7 @@ npm install mercadolibre/tiny.js
 ```
 
 ```shell
-bower install mercadolibre/tiny.js
+bower install tiny
 ```
 
 ### From CDN
