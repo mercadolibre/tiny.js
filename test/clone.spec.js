@@ -31,5 +31,14 @@ describe('tiny.clone', () => {
 
         expect(target.c()).to.equal(5);
         expect(target.d).to.eql({e:3});
+
+        let nullObject = null;
+        let nullObjectClone = clone(nullObject);
+        expect(nullObjectClone).to.eql({});
+
+        let cloneString = function() {
+            return clone('asd');
+        }
+        expect(cloneString).to.throw(Error);
     });
 });
