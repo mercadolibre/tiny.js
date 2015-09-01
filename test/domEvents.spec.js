@@ -23,7 +23,7 @@ describe('DOMEvents', () => {
     });
 
     after(() => {
-        //document.body.removeChild(container);
+        document.body.removeChild(container);
     });
 
     it('should just to be defined', () => {
