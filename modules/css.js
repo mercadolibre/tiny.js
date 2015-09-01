@@ -52,7 +52,9 @@ function getElStyle(el, prop) {
 function getElements(el) {
     if (typeof el === 'string') {
         return [].slice.call(document.querySelectorAll(el));
-    } else if (el.length) {
+    } else if (typeof el === 'object' &&
+        /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) &&
+        Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
         return [].slice.call(el);
     } else {
         return [el];
