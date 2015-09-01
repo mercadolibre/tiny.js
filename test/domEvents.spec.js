@@ -3,7 +3,9 @@ import { DOMEvents } from '../modules/domEvents';
 describe('DOMEvents', () => {
     let container = document.createElement('div');
     let button = document.createElement('button');
-    let input;
+    var form;
+    var input;
+    var submit;
 
     function click(el) {
         var event = document.createEvent('MouseEvents');
@@ -12,14 +14,16 @@ describe('DOMEvents', () => {
     }
 
     before(() => {
-        container.innerHTML = '<div class="child"><input id="input" value=""/></div>';
+        container.innerHTML = '<div class="child"><form id="form" action="mock/sites.json"><input id="input" value=""/><input type="submit" id="submitBtn" value="Submit"></form></div>';
         document.body.appendChild(container);
         container.appendChild(button);
+        form = document.querySelector('#form');
         input = document.querySelector('#input');
+        submit = document.querySelector('#submitBtn');
     });
 
     after(() => {
-        document.body.removeChild(container);
+        //document.body.removeChild(container);
     });
 
     it('should just to be defined', () => {
@@ -31,16 +35,22 @@ describe('DOMEvents', () => {
         let cb11 = chai.spy();
         let cb12 = chai.spy();
         let cb13 = chai.spy();
+        let cb14 = chai.spy(function(e){
+            e.preventDefault();
+        });
 
         it('should add event listener to an element', () => {
             DOMEvents.on('button', 'click', cb11);
             DOMEvents.on(button, 'click', cb12);
             DOMEvents.on('#input', 'click', cb13);
+            DOMEvents.on(form, 'submit', cb14);
             click(button);
             click(input);
+            click(submit);
             expect(cb11).to.have.been.called.once;
             expect(cb12).to.have.been.called.once;
             expect(cb13).to.have.been.called.once;
+            expect(cb14).to.have.been.called.once;
         });
     });
 
