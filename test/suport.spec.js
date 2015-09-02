@@ -1,4 +1,4 @@
-import { support } from '../modules/support';
+import support from '../modules/support';
 
 describe('tiny.support', () => {
     describe('.touch', () => {

@@ -5,11 +5,11 @@ import EventEmitter from './modules/eventEmitter';
 import ajax from './modules/ajax';
 import jsonp from './modules/jsonp';
 import isPlainObject from './modules/isPlainObject';
-import { support } from './modules/support';
+import support from './modules/support';
 import classList from './modules/classList';
 import css from './modules/css';
-import { cookies } from './modules/cookies';
-import { DOMEvents } from './modules/domEvents';
+import cookies from './modules/cookies';
+import DOMEvents from './modules/domEvents';
 
 let tiny = {
     clone,

@@ -1,5 +1,5 @@
 export default function clone(obj) {
-    if (!obj || typeof obj !== 'object') {
+    if (obj === undefined || typeof obj !== 'object') {
         throw new Error('The "obj" parameter is required and must be an object.');
     }
 

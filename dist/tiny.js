@@ -186,7 +186,7 @@ Object.defineProperty(exports, '__esModule', {
 exports['default'] = clone;
 
 function clone(obj) {
-    if (!obj || typeof obj !== 'object') {
+    if (obj === undefined || typeof obj !== 'object') {
         throw new Error('The "obj" parameter is required and must be an object.');
     }
 
@@ -288,7 +288,7 @@ function remove(key) {
     set(key, '', -1);
 }
 
-function enabled() {
+function isEnabled() {
     if (navigator.cookieEnabled) {
         return true;
     }
@@ -304,10 +304,11 @@ var cookies = {
     get: get,
     set: set,
     remove: remove,
-    enabled: enabled
+    isEnabled: isEnabled
 };
 
-exports.cookies = cookies;
+exports['default'] = cookies;
+
 /*
  * Escapes only characters that are not allowed in cookies
  */
@@ -316,6 +317,7 @@ function encodeCookie(value) {
         return encodeURIComponent(character);
     });
 }
+module.exports = exports['default'];
 
 },{"./isPlainObject":10}],5:[function(require,module,exports){
 /**
@@ -590,7 +592,8 @@ var DOMEvents = {
     off: off,
     trigger: trigger
 };
-exports.DOMEvents = DOMEvents;
+
+exports['default'] = DOMEvents;
 
 },{"./extend":8,"./isPlainObject":10}],7:[function(require,module,exports){
 'use strict';
@@ -957,7 +960,8 @@ var support = {
     })()
 };
 
-exports.support = support;
+exports['default'] = support;
+
 /**
  * Checks for the CSS Transitions support (http://www.modernizr.com/)
  *
@@ -1011,6 +1015,7 @@ function animationEnd() {
 
     return false;
 }
+module.exports = exports['default'];
 
 },{}],13:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
@@ -1381,6 +1386,8 @@ var _modulesIsPlainObject2 = _interopRequireDefault(_modulesIsPlainObject);
 
 var _modulesSupport = require('./modules/support');
 
+var _modulesSupport2 = _interopRequireDefault(_modulesSupport);
+
 var _modulesClassList = require('./modules/classList');
 
 var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
@@ -1391,7 +1398,11 @@ var _modulesCss2 = _interopRequireDefault(_modulesCss);
 
 var _modulesCookies = require('./modules/cookies');
 
+var _modulesCookies2 = _interopRequireDefault(_modulesCookies);
+
 var _modulesDomEvents = require('./modules/domEvents');
+
+var _modulesDomEvents2 = _interopRequireDefault(_modulesDomEvents);
 
 var tiny = {
     clone: _modulesClone2['default'],
@@ -1401,16 +1412,16 @@ var tiny = {
     ajax: _modulesAjax2['default'],
     jsonp: _modulesJsonp2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
-    support: _modulesSupport.support,
+    support: _modulesSupport2['default'],
     classList: _modulesClassList2['default'],
     css: _modulesCss2['default'],
-    cookies: _modulesCookies.cookies,
-    on: _modulesDomEvents.DOMEvents.on,
-    bind: _modulesDomEvents.DOMEvents.on,
-    one: _modulesDomEvents.DOMEvents.once,
-    once: _modulesDomEvents.DOMEvents.once,
-    off: _modulesDomEvents.DOMEvents.off,
-    trigger: _modulesDomEvents.DOMEvents.trigger
+    cookies: _modulesCookies2['default'],
+    on: _modulesDomEvents2['default'].on,
+    bind: _modulesDomEvents2['default'].on,
+    one: _modulesDomEvents2['default'].once,
+    once: _modulesDomEvents2['default'].once,
+    off: _modulesDomEvents2['default'].off,
+    trigger: _modulesDomEvents2['default'].trigger
 };
 
 if (typeof window !== 'undefined') {

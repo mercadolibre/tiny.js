@@ -1,4 +1,4 @@
-import { cookies } from '../modules/cookies';
+import cookies from '../modules/cookies';
 
 describe('tiny.cookies', () => {
     // simple function to get a cookie value without the tiny.cookies module
@@ -18,13 +18,13 @@ describe('tiny.cookies', () => {
     // Shared cookie name
     let cookieName = 'testing';
 
-    describe('.enabled()', () => {
+    describe('.isEnabled()', () => {
         it('should just to be defined', () => {
-            expect(cookies.enabled).to.exist;
+            expect(cookies.isEnabled).to.exist;
         });
         it('should check that cookies are enabled in the browser', () => {
-            expect(cookies.enabled()).to.be.a('boolean');
-            expect(cookies.enabled()).to.be.true;
+            expect(cookies.isEnabled()).to.be.a('boolean');
+            expect(cookies.isEnabled()).to.be.true;
         });
     });
 
