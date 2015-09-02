@@ -168,9 +168,11 @@ export function trigger(elem, event, props) {
     });
 }
 
-export var DOMEvents = {
+let DOMEvents = {
     on,
     once,
     off,
     trigger
 };
+
+export default DOMEvents;

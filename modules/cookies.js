@@ -69,7 +69,7 @@ function remove(key) {
     set(key, '', -1);
 }
 
-function enabled() {
+function isEnabled() {
     if (navigator.cookieEnabled) {
         return true;
     }
@@ -81,12 +81,14 @@ function enabled() {
     return exist;
 }
 
-export var cookies = {
+let cookies = {
     get,
     set,
     remove,
-    enabled
+    isEnabled
 };
+
+export default cookies;
 
 /*
  * Escapes only characters that are not allowed in cookies

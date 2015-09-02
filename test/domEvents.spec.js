@@ -1,4 +1,4 @@
-import { DOMEvents } from '../modules/domEvents';
+import DOMEvents from '../modules/domEvents';
 
 describe('DOMEvents', () => {
     let container = document.createElement('div');

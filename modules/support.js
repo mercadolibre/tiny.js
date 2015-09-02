@@ -1,4 +1,4 @@
-export var support = {
+let support = {
     /**
      * Verify that CSS Transitions are supported (or any of its browser-specific implementations).
      *
@@ -55,6 +55,8 @@ export var support = {
         }
     })()
 };
+
+export default support;
 
 /**
  * Checks for the CSS Transitions support (http://www.modernizr.com/)
