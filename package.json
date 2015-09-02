@@ -1,6 +1,6 @@
 {
   "name": "tiny.js",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A JavaScript utility library oriented to real world tasks.",
   "main": "tiny.js",
   "scripts": {
