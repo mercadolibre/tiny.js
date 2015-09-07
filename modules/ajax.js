@@ -38,9 +38,8 @@ export default function ajax(url, settings) {
 
     if (!opts.cache) {
         opts.url = opts.url +
-            (opts.url.indexOf('?') ? '&' : '?') +
-            'nc=' +
-            Math.floor(Math.random() * 9e9);
+            (~opts.url.indexOf('?') ? '&' : '?') +
+            'nc=' + Math.floor(Math.random() * 9e9);
     }
 
     let complete = function (status, xhr) {

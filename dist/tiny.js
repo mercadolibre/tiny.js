@@ -51,7 +51,7 @@ function ajax(url, settings) {
     }
 
     if (!opts.cache) {
-        opts.url = opts.url + (opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
+        opts.url = opts.url + (~opts.url.indexOf('?') ? '&' : '?') + 'nc=' + Math.floor(Math.random() * 9e9);
     }
 
     var complete = function complete(status, xhr) {
@@ -127,55 +127,79 @@ function ajax(url, settings) {
 module.exports = exports['default'];
 
 },{"./extend":8}],2:[function(require,module,exports){
-/**
- * Add or remove class
- *
- * @name classList
- * @memberof tiny
- * @param {HTMLElement} el A given HTMLElement.
- * @see Based on: <a href="http://youmightnotneedjquery.com/" target="_blank">http://youmightnotneedjquery.com/</a>
- *
- * @example
- * tiny.classList(document.body).add('ch-example');
- */
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
-exports['default'] = classList;
+exports.addClass = addClass;
+exports.removeClass = removeClass;
+exports.hasClass = hasClass;
+var isClassList = !!document.body.classList;
 
-function classList(el) {
-    var isClassList = el.classList;
+/**
+ * Adds the specified class to an element
+ *
+ * @param el {HTMLElement}
+ * @param className {String}
+ *
+ * @example
+ * tiny.addClass(document.body, 'tiny-example');
+ */
 
-    return {
-        add: function add(className) {
-            if (isClassList) {
-                el.classList.add(className);
-            } else {
-                el.setAttribute('class', el.getAttribute('class') + ' ' + className);
-            }
-        },
-        remove: function remove(className) {
-            if (isClassList) {
-                el.classList.remove(className);
-            } else {
-                el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
-            }
-        },
-        contains: function contains(className) {
-            var exist;
-            if (isClassList) {
-                exist = el.classList.contains(className);
-            } else {
-                exist = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-            }
-            return exist;
-        }
-    };
+function addClass(el, className) {
+    if (isClassList) {
+        el.classList.add(className);
+    } else {
+        el.setAttribute('class', el.getAttribute('class') + ' ' + className);
+    }
 }
 
-module.exports = exports['default'];
+/**
+ * Remove a single class from an element
+ *
+ * @param el {HTMLElement}
+ * @param className {String}
+ *
+ * @example
+ * tiny.removeClass(document.body, 'tiny-example');
+ */
+
+function removeClass(el, className) {
+    if (isClassList) {
+        el.classList.remove(className);
+    } else {
+        el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
+    }
+}
+
+/**
+ * Determine whether is the given class is assigned to an element
+ * @param el {HTMLElement}
+ * @param className {String}
+ * @returns {Boolean}
+ *
+ * @example
+ * tiny.hasClass(document.body, 'tiny-example');
+ */
+
+function hasClass(el, className) {
+    var exist;
+    if (isClassList) {
+        exist = el.classList.contains(className);
+    } else {
+        exist = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
+    }
+    return exist;
+}
+
+var classList = {
+    addClass: addClass,
+    removeClass: removeClass,
+    hasClass: hasClass
+};
+
+exports['default'] = classList;
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -1413,7 +1437,9 @@ var tiny = {
     jsonp: _modulesJsonp2['default'],
     isPlainObject: _modulesIsPlainObject2['default'],
     support: _modulesSupport2['default'],
-    classList: _modulesClassList2['default'],
+    addClass: _modulesClassList2['default'].addClass,
+    removeClass: _modulesClassList2['default'].removeClass,
+    hasClass: _modulesClassList2['default'].hasClass,
     css: _modulesCss2['default'],
     cookies: _modulesCookies2['default'],
     on: _modulesDomEvents2['default'].on,

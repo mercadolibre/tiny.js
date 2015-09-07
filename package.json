@@ -21,6 +21,11 @@
     "url": "https://github.com/mercadolibre/tiny.js/issues"
   },
   "homepage": "https://github.com/mercadolibre/tiny.js#readme",
+  "files": [
+    "dist/",
+    "modules/",
+    "tiny.js"
+  ],
   "browserify": {
     "transform": [
       "babelify"
