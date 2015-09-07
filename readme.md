@@ -95,26 +95,51 @@ The most relevant methods:
 - `once()`:
 - `trigger()`:
 
-### `tiny.classList(el)`
 
-Manages the CSS class names of a defined DOM element.
+### `tiny.addClass(el, className)`
 
-- `el`: A given `HTMLElement`.
+Adds the specified class to an element
 
-Returns methods to manage class names:
-
-- `add(className)`: Receives a `String` with the given CSS class name.
-- `remove(className)`: Same.
-- `contains(className)`: Same. Returns a `Boolean`.
+- `el`: An `HTMLElement`
+- `className`: `String` The class that should be added to an element
 
 Example:
 ```js
-tiny.classList(document.body).contains('example'); // => false
-
-tiny.classList(document.body).add('example');
-
-tiny.classList(document.body).contains('example'); // => true
+tiny.addClass(document.body, 'example');
 ```
+
+
+### `tiny.removeClass(el, className)`
+
+Removes the specified class from an element
+
+- `el`: An `HTMLElement`
+- `className`: `String` The class that should be removed
+
+Example:
+```js
+tiny.removeClass(document.body, 'example');
+```
+
+
+### `tiny.hasClass(el, className)`
+
+Determines whether is the given class is assigned to an element
+
+- `el`: An `HTMLElement`
+- `className`: `String` The class that should be adden to an element
+
+Example:
+```js
+tiny.hasClass(document.body, 'example'); // => false
+```
+
+
+*Note*: `tiny.addClass`, `tiny.removeClass` and `tiny.hasClass` are the methods
+  of a single module named `classList`. It can be imported entirely as
+  `import classList from 'tiny.js/modules/classList'` or as a separated methods
+  `import {addClass, removeClass, hasClass} from 'tiny.js/modules/classList'`
+
 
 ### `tiny.css(el, key[, value])`
 
