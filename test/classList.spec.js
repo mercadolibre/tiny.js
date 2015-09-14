@@ -1,4 +1,4 @@
-import classList from '../modules/classList';
+import {addClass, removeClass, hasClass} from '../modules/classList';
 
 describe('tiny.classList', () => {
     let container = document.createElement('div');
@@ -13,18 +13,18 @@ describe('tiny.classList', () => {
     });
 
     it('is should handle Element\'s classes like a Element.classList', () => {
-        expect(classList(container).contains('xxx')).to.be.false;
-        classList(container).add('xxx');
-        expect(classList(container).contains('xxx')).to.be.true;
+        expect(hasClass(container, 'xxx')).to.be.false;
+        addClass(container, 'xxx');
+        expect(hasClass(container, 'xxx')).to.be.true;
 
         let child = container.querySelector('.child');
-        expect(classList(child).contains('child')).to.be.true;
-        classList(child).add('daughter');
+        expect(hasClass(child, 'child')).to.be.true;
+        addClass(child, 'daughter');
         expect(child.className).to.equal('child daughter');
 
         // Would be nice to handle multiple classNames
-        classList(child).remove('daughter');
-        classList(child).remove('child');
+        removeClass(child, 'daughter');
+        removeClass(child, 'child');
         expect(child.className).to.be.empty;
     });
 });
