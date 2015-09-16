@@ -8,6 +8,8 @@ import isPlainObject from './modules/isPlainObject';
 import support from './modules/support';
 import classList from './modules/classList';
 import css from './modules/css';
+import offset from './modules/offset';
+import scroll from './modules/scroll';
 import cookies from './modules/cookies';
 import DOMEvents from './modules/domEvents';
 
@@ -24,6 +26,8 @@ let tiny = {
     removeClass: classList.removeClass,
     hasClass: classList.hasClass,
     css,
+    offset,
+    scroll,
     cookies,
     on: DOMEvents.on,
     bind: DOMEvents.on,

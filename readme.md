@@ -226,6 +226,23 @@ if (tiny.support.customEvent) {
 - `isEnabled`:
 
 
+### `tiny.scroll`
+
+Get the current vertical and horizontal positions of the scroll bars.
+
+**[WIP]**
+
+
+### `tiny.offset(el)`
+
+Get the current offset of an element.
+
+- `el`: An `HTMLElement`
+
+**[WIP]**
+
+
+
 ## Maintenance
 Oleh Burkhay (UX Front-End), and [contributors](https://github.com/mercadolibre/tiny.js/graphs/contributors).
 

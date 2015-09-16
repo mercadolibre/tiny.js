@@ -651,7 +651,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":13}],8:[function(require,module,exports){
+},{"events":15}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -770,7 +770,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":14}],10:[function(require,module,exports){
+},{"inherits":16}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -926,6 +926,109 @@ module.exports = exports['default'];
 Object.defineProperty(exports, '__esModule', {
     value: true
 });
+exports['default'] = offset;
+
+function _interopRequireDefault(obj) {
+    return obj && obj.__esModule ? obj : { 'default': obj };
+}
+
+var _css = require('./css');
+
+var _css2 = _interopRequireDefault(_css);
+
+var _scroll = require('./scroll');
+
+var _scroll2 = _interopRequireDefault(_scroll);
+
+/**
+ * Get the current offset of an element.
+ *
+ * @param {HTMLElement} el A given HTMLElement.
+ * @returns {{left: Number, top: Number}}
+ *
+ * @example
+ * tiny.offset(el);
+ */
+
+function offset(el) {
+    var rect = el.getBoundingClientRect(),
+        fixedParent = getFixedParent(el),
+        currentScroll = (0, _scroll2['default'])(),
+        offset = {
+        'left': rect.left,
+        'top': rect.top
+    };
+
+    if ((0, _css2['default'])(el, 'position') !== 'fixed' && fixedParent === null) {
+        offset.left += currentScroll.left;
+        offset.top += currentScroll.top;
+    }
+
+    return offset;
+}
+
+/**
+ * Get the current parentNode with the 'fixed' position.
+ *
+ * @private
+ * @param {HTMLElement} el A given HTMLElement.
+ *
+ * @returns {HTMLElement}
+ */
+function getFixedParent(el) {
+    var currentParent = el.offsetParent,
+        parent = undefined;
+
+    while (parent === undefined) {
+
+        if (currentParent === null) {
+            parent = null;
+            break;
+        }
+
+        if ((0, _css2['default'])(currentParent, 'position') !== 'fixed') {
+            currentParent = currentParent.offsetParent;
+        } else {
+            parent = currentParent;
+        }
+    }
+
+    return parent;
+}
+module.exports = exports['default'];
+
+},{"./css":5,"./scroll":13}],13:[function(require,module,exports){
+/**
+ * Get the current vertical and horizontal positions of the scroll bars.
+ *
+ * @memberof tiny
+ * @returns {{left: (Number), top: (Number)}}
+ *
+ * @example
+ * tiny.scroll().top;
+ */
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
+exports['default'] = scroll;
+
+function scroll() {
+    return {
+        'left': window.pageXOffset || document.documentElement.scrollLeft || 0,
+        'top': window.pageYOffset || document.documentElement.scrollTop || 0
+    };
+}
+
+module.exports = exports['default'];
+
+},{}],14:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, '__esModule', {
+    value: true
+});
 var support = {
     /**
      * Verify that CSS Transitions are supported (or any of its browser-specific implementations).
@@ -1041,7 +1144,7 @@ function animationEnd() {
 }
 module.exports = exports['default'];
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1344,7 +1447,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],14:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1369,7 +1472,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],15:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1420,6 +1523,14 @@ var _modulesCss = require('./modules/css');
 
 var _modulesCss2 = _interopRequireDefault(_modulesCss);
 
+var _modulesOffset = require('./modules/offset');
+
+var _modulesOffset2 = _interopRequireDefault(_modulesOffset);
+
+var _modulesScroll = require('./modules/scroll');
+
+var _modulesScroll2 = _interopRequireDefault(_modulesScroll);
+
 var _modulesCookies = require('./modules/cookies');
 
 var _modulesCookies2 = _interopRequireDefault(_modulesCookies);
@@ -1441,6 +1552,8 @@ var tiny = {
     removeClass: _modulesClassList2['default'].removeClass,
     hasClass: _modulesClassList2['default'].hasClass,
     css: _modulesCss2['default'],
+    offset: _modulesOffset2['default'],
+    scroll: _modulesScroll2['default'],
     cookies: _modulesCookies2['default'],
     on: _modulesDomEvents2['default'].on,
     bind: _modulesDomEvents2['default'].on,
@@ -1457,4 +1570,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/support":12}]},{},[15]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/offset":12,"./modules/scroll":13,"./modules/support":14}]},{},[17]);
