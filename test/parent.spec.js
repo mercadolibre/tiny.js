@@ -6,7 +6,7 @@ describe('tiny.parent', () => {
         listItem;
 
     before(function() {
-        container.innerHTML = '<ul class="list">' + '<li class="list-item"></li>'.repeat(5) + '</ul>';
+        container.innerHTML = '<ul class="list"><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li></ul>';
         document.body.appendChild(container);
 
         list = document.querySelector('.list');
