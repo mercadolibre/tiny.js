@@ -651,7 +651,7 @@ var _events2 = _interopRequireDefault(_events);
 exports['default'] = _events2['default'];
 module.exports = exports['default'];
 
-},{"events":16}],8:[function(require,module,exports){
+},{"events":17}],8:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -770,7 +770,7 @@ var _inherits2 = _interopRequireDefault(_inherits);
 exports['default'] = _inherits2['default'];
 module.exports = exports['default'];
 
-},{"inherits":17}],10:[function(require,module,exports){
+},{"inherits":18}],10:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -921,6 +921,38 @@ function jsonp(url, settings) {
 module.exports = exports['default'];
 
 },{"./extend":8}],12:[function(require,module,exports){
+/**
+ * IE8 safe method to get the next element sibling
+ *
+ * @memberof tiny
+ * @param {HTMLElement} el A given HTMLElement.
+ * @returns {HTMLElement}
+ *
+ * @example
+ * tiny.next(el);
+ */
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports["default"] = next;
+
+function next(element) {
+    function next(el) {
+        do {
+            el = el.nextSibling;
+        } while (el && el.nodeType !== 1);
+
+        return el;
+    }
+
+    return element.nextElementSibling || next(element);
+}
+
+module.exports = exports["default"];
+
+},{}],13:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -997,7 +1029,7 @@ function getFixedParent(el) {
 }
 module.exports = exports['default'];
 
-},{"./css":5,"./scroll":14}],13:[function(require,module,exports){
+},{"./css":5,"./scroll":15}],14:[function(require,module,exports){
 /**
  * Get the parent of an element, optionally filtered by a tag
  *
@@ -1053,7 +1085,7 @@ function parent(_x, _x2) {
 
 module.exports = exports["default"];
 
-},{}],14:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * Get the current vertical and horizontal positions of the scroll bars.
  *
@@ -1079,7 +1111,7 @@ function scroll() {
 
 module.exports = exports['default'];
 
-},{}],15:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1200,7 +1232,7 @@ function animationEnd() {
 }
 module.exports = exports['default'];
 
-},{}],16:[function(require,module,exports){
+},{}],17:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -1503,7 +1535,7 @@ function isUndefined(arg) {
   return arg === void 0;
 }
 
-},{}],17:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
@@ -1528,7 +1560,7 @@ if (typeof Object.create === 'function') {
   }
 }
 
-},{}],18:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 
 Object.defineProperty(exports, '__esModule', {
@@ -1579,6 +1611,10 @@ var _modulesParent = require('./modules/parent');
 
 var _modulesParent2 = _interopRequireDefault(_modulesParent);
 
+var _modulesNext = require('./modules/next');
+
+var _modulesNext2 = _interopRequireDefault(_modulesNext);
+
 var _modulesCss = require('./modules/css');
 
 var _modulesCss2 = _interopRequireDefault(_modulesCss);
@@ -1612,6 +1648,7 @@ var tiny = {
     removeClass: _modulesClassList2['default'].removeClass,
     hasClass: _modulesClassList2['default'].hasClass,
     parent: _modulesParent2['default'],
+    next: _modulesNext2['default'],
     css: _modulesCss2['default'],
     offset: _modulesOffset2['default'],
     scroll: _modulesScroll2['default'],
@@ -1631,4 +1668,4 @@ if (typeof window !== 'undefined') {
 exports['default'] = tiny;
 module.exports = exports['default'];
 
-},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/offset":12,"./modules/parent":13,"./modules/scroll":14,"./modules/support":15}]},{},[18]);
+},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/extend":8,"./modules/inherits":9,"./modules/isPlainObject":10,"./modules/jsonp":11,"./modules/next":12,"./modules/offset":13,"./modules/parent":14,"./modules/scroll":15,"./modules/support":16}]},{},[19]);

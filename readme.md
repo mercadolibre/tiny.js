@@ -139,6 +139,21 @@ tiny.hasClass(document.body, 'example'); // => false
   of a single module named `classList`. It can be imported entirely as
   `import classList from 'tiny.js/modules/classList'` or as a separated methods
   `import {addClass, removeClass, hasClass} from 'tiny.js/modules/classList'`
+  
+  
+### `tiny.parent(el, [, tagname])`
+
+Get the parent of an element, optionally filtered by a tag
+
+- `el`: An `HTMLElement`
+- `className`: `String` The tag name of the parent to look for
+
+
+### `tiny.next(el)`
+
+Get the next element sibling 
+
+- `el`: An `HTMLElement`
 
 
 ### `tiny.css(el, key[, value])`

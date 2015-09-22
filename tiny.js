@@ -8,6 +8,7 @@ import isPlainObject from './modules/isPlainObject';
 import support from './modules/support';
 import classList from './modules/classList';
 import parent from './modules/parent';
+import next from './modules/next';
 import css from './modules/css';
 import offset from './modules/offset';
 import scroll from './modules/scroll';
@@ -27,6 +28,7 @@ let tiny = {
     removeClass: classList.removeClass,
     hasClass: classList.hasClass,
     parent,
+    next,
     css,
     offset,
     scroll,
