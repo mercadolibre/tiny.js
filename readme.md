@@ -139,6 +139,21 @@ tiny.hasClass(document.body, 'example'); // => false
   of a single module named `classList`. It can be imported entirely as
   `import classList from 'tiny.js/modules/classList'` or as a separated methods
   `import {addClass, removeClass, hasClass} from 'tiny.js/modules/classList'`
+  
+  
+### `tiny.parent(el, [, tagname])`
+
+Get the parent of an element, optionally filtered by a tag
+
+- `el`: An `HTMLElement`
+- `className`: `String` The tag name of the parent to look for
+
+
+### `tiny.next(el)`
+
+Get the next element sibling 
+
+- `el`: An `HTMLElement`
 
 
 ### `tiny.css(el, key[, value])`
@@ -179,6 +194,24 @@ Performs a JSONP request
     - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
     - `success`: type `Function`. Success callback function.
     - `error`: type `Function`. Error callback function.
+    
+### `tiny.jcors(...args)`
+Tiny loader of javascript sources using CORS. Load scripts asynchronously in parallel maintaining the execution order.
+See [jcors-loader](https://github.com/pablomoretti/jcors-loader) for complete documentation.
+
+Example:
+```js
+tiny.jcors(
+    "http://xxxx/jquery.min.js",
+    function() {
+        $("#demo").html("jQuery Loaded");
+    },
+    "http://xxxx/jquery.cookie.js",
+    function() {  
+        $.cookie('not_existing'); 
+    }
+);
+```
 
 ### `tiny.support`
 
@@ -224,6 +257,23 @@ if (tiny.support.customEvent) {
 - `set`:
 - `remove`:
 - `isEnabled`:
+
+
+### `tiny.scroll`
+
+Get the current vertical and horizontal positions of the scroll bars.
+
+**[WIP]**
+
+
+### `tiny.offset(el)`
+
+Get the current offset of an element.
+
+- `el`: An `HTMLElement`
+
+**[WIP]**
+
 
 
 ## Maintenance

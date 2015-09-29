@@ -12,6 +12,7 @@ module.exports = function(config) {
         files: [
             {pattern: 'test/mock/*.json', watched: false, included: false},
             {pattern: 'test/mock/*.jsonp', watched: false, included: false},
+            {pattern: 'test/mock/*.js', watched: false, included: false},
             {pattern: 'modules/*.js', watched: true, included: false},
             'test/**/*.spec.js'
         ],
