@@ -4,6 +4,7 @@ import inherits from './modules/inherits';
 import EventEmitter from './modules/eventEmitter';
 import ajax from './modules/ajax';
 import jsonp from './modules/jsonp';
+import jcors from './modules/jcors';
 import isPlainObject from './modules/isPlainObject';
 import support from './modules/support';
 import classList from './modules/classList';
@@ -14,6 +15,7 @@ import offset from './modules/offset';
 import scroll from './modules/scroll';
 import cookies from './modules/cookies';
 import DOMEvents from './modules/domEvents';
+import * as events from './modules/events';
 
 let tiny = {
     clone,
@@ -22,6 +24,7 @@ let tiny = {
     EventEmitter,
     ajax,
     jsonp,
+    jcors,
     isPlainObject,
     support,
     addClass: classList.addClass,
@@ -40,6 +43,10 @@ let tiny = {
     off: DOMEvents.off,
     trigger: DOMEvents.trigger
 };
+
+for (let e in events) {
+    tiny[e] = events[e];
+}
 
 if (typeof window !== 'undefined') {
     window.tiny = tiny;

@@ -194,6 +194,24 @@ Performs a JSONP request
     - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
     - `success`: type `Function`. Success callback function.
     - `error`: type `Function`. Error callback function.
+    
+### `tiny.jcors(...args)`
+Tiny loader of javascript sources using CORS. Load scripts asynchronously in parallel maintaining the execution order.
+See [jcors-loader](https://github.com/pablomoretti/jcors-loader) for complete documentation.
+
+Example:
+```js
+tiny.jcors(
+    "http://xxxx/jquery.min.js",
+    function() {
+        $("#demo").html("jQuery Loaded");
+    },
+    "http://xxxx/jquery.cookie.js",
+    function() {  
+        $.cookie('not_existing'); 
+    }
+);
+```
 
 ### `tiny.support`
 
