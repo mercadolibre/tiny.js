@@ -1,5 +1,3 @@
-require('babel/register');
-
 var gulp = require('gulp');
 var runSequence = require('gulp-run-sequence');
 var babelify = require('babelify');
@@ -26,7 +24,9 @@ gulp.task('build', function() {
         entries: './tiny.js',
         debug: false
     })
-        .transform(babelify)
+        .transform(babelify.configure({
+            optional: ['runtime']
+        }))
         .bundle()
         .pipe(source('tiny.js'))
         .pipe(gulp.dest('./dist'));
