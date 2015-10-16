@@ -2,6 +2,7 @@
 
 > A JavaScript utility library oriented to real world tasks.
 
+
 ## Purpose
 
 Tiny aims to stay small and simple, while powerful and really useful.
@@ -10,25 +11,29 @@ Inspired by jQuery and Underscore, but using concepts from [You might not need j
 
 Methods are implemented individually and not as part of a whole.
 
+
 ## Installation
 
 There are multiple ways to use Tiny.
 
+
 ### Inline resource (recommended)
 
-Grab [the distributable code](https://github.com/mercadolibre/tiny.js/blob/master/dist/tiny.min.js) and embed into a `<script>` tag just before the `</body>` tag.
+Grab [the distributable code](https://github.com/mercadolibre/tiny.js/blob/master/dist/tiny.min.js) and embed into a `<script>` tag just before the closing `</body>` tag.
+
 
 ### Module
 
-Use NPM or Bower and include Tiny as part of the build process.
+Use NPM or Bower and include Tiny.js as a part of the build process.
 
 ```shell
-npm install mercadolibre/tiny.js
+npm install tiny.js
 ```
 
 ```shell
 bower install tiny
 ```
+
 
 ### From CDN
 
@@ -41,6 +46,7 @@ Check [releases](https://github.com/mercadolibre/tiny.js/releases) to find the l
 
 ## API
 
+
 ### `tiny.clone(obj)`
 
 Creates a copy of the provided object.
@@ -49,9 +55,13 @@ Creates a copy of the provided object.
 
 Returns an `Object`.
 
+
 ### `tiny.extend([deep,] target, ...sources)`
 
-**[WIP]**
+Copy all of the properties of the sources to the target object and returns the 
+  resulting object. The last source will override properties of the same name in
+  previous object.
+
 
 ### `tiny.inherits(obj, superConstructor)`
 
@@ -64,6 +74,7 @@ Fully compatible with standard Node.js `inherits`.
 - `obj`: type `Object`. An object that will have the new members.
 - `superConstructor`: type `Function`. The constructor Class.
 
+
 ### `tiny.isPlainObject(obj)`
 
 Validates for a valid Object.
@@ -71,6 +82,7 @@ Validates for a valid Object.
 - `obj`: type `Object`. The object to be validated.
 
 Returns a `Boolean`.
+
 
 ### `tiny.EventEmitter`
 
@@ -84,7 +96,10 @@ The most relevant methods:
 
 **[WIP]**
 
-**See the [external module](https://www.npmjs.com/package/events) and the [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter) for a complete reference.**
+**See the [external module](https://www.npmjs.com/package/events) and the
+  [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter) 
+  for a complete reference.**
+
 
 ### `tiny.DOMEvents`
 
@@ -139,8 +154,8 @@ tiny.hasClass(document.body, 'example'); // => false
   of a single module named `classList`. It can be imported entirely as
   `import classList from 'tiny.js/modules/classList'` or as a separated methods
   `import {addClass, removeClass, hasClass} from 'tiny.js/modules/classList'`
-  
-  
+
+
 ### `tiny.parent(el, [, tagname])`
 
 Get the parent of an element, optionally filtered by a tag
@@ -162,8 +177,20 @@ Get the value of a computed style for the first element in set of
   matched elements or set one or more CSS properties for every matched element.
   
 - `el`: An `HTMLElement` or a valid CSS selector.
-- `key`: **[WIP]**
-- `value`: **[WIP]**
+- `key`: A CSS property name. Can be an object of property-value pairs to set.
+- `value`: A value to set for the property.
+
+```js
+// Setter
+tiny.css(el, 'width', 'auto');
+tiny.css(el, {
+  width: 'auto',
+  height: 'auto'
+});
+
+// Getter
+tiny.css(el, 'width');
+```
 
 ### `tiny.ajax(url, settings)`
 
@@ -180,7 +207,8 @@ Performs an asynchronous HTTP (Ajax) request.
     - `success`: **[WIP]**
     - `error`: **[WIP]**
     - `complete`: **[WIP]**
-    
+
+
 ### `tiny.jsonp(url, settings, callback)`
 
 Performs a JSONP request
@@ -194,7 +222,8 @@ Performs a JSONP request
     - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
     - `success`: type `Function`. Success callback function.
     - `error`: type `Function`. Error callback function.
-    
+
+
 ### `tiny.jcors(...args)`
 Tiny loader of javascript sources using CORS. Load scripts asynchronously in parallel maintaining the execution order.
 See [jcors-loader](https://github.com/pablomoretti/jcors-loader) for complete documentation.
@@ -213,9 +242,11 @@ tiny.jcors(
 );
 ```
 
+
 ### `tiny.support`
 
 Boolean values to determine which features are available on the browser.
+
 
 #### `tiny.support.animation`
 
@@ -228,6 +259,7 @@ if (tiny.support.animation) {
 }
 ```
 
+
 #### `tiny.support.touch`
 
 Checks is the User Agent supports touch events.
@@ -237,6 +269,7 @@ if (tiny.support.touch) {
     // Some code here!
 }
 ```
+
 
 #### `tiny.support.customEvent`
 
@@ -275,12 +308,13 @@ Get the current offset of an element.
 **[WIP]**
 
 
-
 ## Maintenance
 Oleh Burkhay (UX Front-End), and [contributors](https://github.com/mercadolibre/tiny.js/graphs/contributors).
 
+
 ## TO-DO
 [See the issue tracker](https://github.com/mercadolibre/tiny.js/issues).
+
 
 ## Browser support
 Tested on IE8+ and major browsers.
