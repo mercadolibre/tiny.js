@@ -399,7 +399,7 @@ Get the current vertical and horizontal positions of the scroll bars. Returns an
 Example:
 ```js
 tiny.scroll(); // { left: 0, top: 1200 }
-
+```
 
 
 ### `tiny.offset(el)`
