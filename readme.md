@@ -1,5 +1,10 @@
 # Tiny
 
+[![npm version](https://img.shields.io/npm/v/tiny.js.svg)](https://www.npmjs.com/package/tiny.js)
+![Bower version](https://img.shields.io/bower/v/tiny.svg)
+[![Build Status](https://travis-ci.org/mercadolibre/tiny.js.svg?branch=master)](https://travis-ci.org/mercadolibre/tiny.js)
+[![devDependency Status](https://img.shields.io/david/dev/mercadolibre/tiny.js.svg)](https://david-dm.org/mercadolibre/tiny.js#info=devDependencies)
+
 > A JavaScript utility library oriented to real world tasks.
 
 
