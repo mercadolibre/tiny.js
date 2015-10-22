@@ -103,12 +103,64 @@ The most relevant methods:
 
 ### `tiny.DOMEvents`
 
-**[WIP]**
 
-- `on()`:
-- `off()`:
-- `once()`:
-- `trigger()`:
+#### `tiny.on(elem, event, handler, bubbles)`
+
+Attach an event handler for an event to the selected elements.
+
+- `elem`: type `HTMLElement|String`. An HTMLElement or a CSS selector to add listener to
+- `event`: type `String`. Event name.
+- `handler`: type `Function`. Event handler function.
+- `bubbles`: type `Boolean`. Whether or not to be propagated to outer elements.
+
+Example:
+```js
+tiny.on('.btn', 'click', function(e){ /* ... */ });
+tiny.on(document.querySelector('button'), 'click', function(e){ /* ... */ });
+```
+
+#### `tiny.off(elem, event, handler)`
+
+Remove an event handler from the element
+
+- `elem`: type `HTMLElement|String`. An HTMLElement or a CSS selector to remove listener from
+- `event`: type `String`. Event name.
+- `handler`: type `Function`. Event handler function to remove.
+
+Example:
+```js
+tiny.off('.btn', 'click', fn);
+tiny.off(document.querySelector('button'), 'click', fn);
+```
+
+#### `tiny.once(elem, event, handler, bubbles)`
+
+Attach a handler to an event for the element that executes *only* once.
+
+- `elem`: type `HTMLElement|String`. An HTMLElement or a CSS selector to add listener to
+- `event`: type `String`. Event name.
+- `handler`: type `Function`. Event handler function.
+- `bubbles`: type `Boolean`. Whether or not to be propagated to outer elements.
+
+Example:
+```js
+tiny.once('.btn', 'click', fn);
+tiny.once(document.querySelector('button'), 'click', fn);
+```
+
+#### `trigger(elem, event, props)`
+
+Fires an event for the given element.
+
+- `elem`: type `HTMLElement|String`. An HTMLElement or a CSS selector to add listener to
+- `event`: type `String|Event`. Event name or an event object.
+
+Example:
+```js
+tiny.trigger('.btn', 'click');
+tiny.trigger(document.querySelector('button'), 'click');
+tiny.trigger(document.body, 'layoutchange');
+```
 
 
 ### `tiny.addClass(el, className)`
@@ -198,15 +250,15 @@ Performs an asynchronous HTTP (Ajax) request.
 
 - `url`: type `String`. The URL to which the request is sent.
 - `settings`: type `Object`. Optional.
-    - `cache`: type `Boolean`. If set to `false`, it will force requests not to be cached by the browser. Default: `true`.
-    - `data`: **[WIP]**
-    - `headers`: **[WIP]**
-    - `context`: **[WIP]**
-    - `dataType`: **[WIP]**
-    - `method`: **[WIP]**
-    - `success`: **[WIP]**
-    - `error`: **[WIP]**
-    - `complete`: **[WIP]**
+    - `cache`: type `Boolean`. If set to `false`, it will force requests not to be cached by the browser. Default: `true`
+    - `data`: type `String` A data that should be passed with xhr, currently sould be formatted as query string like a `a=b&c=d`. As an alternative `FormData` can be passed
+    - `headers`: type `Object` A list of additional headers, for example `{ 'X-Auth': 'auth-token' }`
+    - `context`: type `Object` Every callback will be called in context of `settings.context` or `window` if not provided
+    - `dataType`: type `String` A mime type, [json,html,text]
+    - `method`: type `String` A valid HTTP method, [GET|POST|PUT|DELETE]
+    - `success`: type `Function` A success callback that receives response data, status and xhr object.
+    - `error`: type `Function` An error callback that receives xhr, status and error object.
+    - `complete`: A success callback that receives response data, status and xhr object.
 
 
 ### `tiny.jsonp(url, settings, callback)`
@@ -245,7 +297,7 @@ tiny.jcors(
 
 ### `tiny.support`
 
-Boolean values to determine which features are available on the browser.
+Boolean values to determine which features are available in the browser.
 
 
 #### `tiny.support.animation`
@@ -284,28 +336,82 @@ if (tiny.support.customEvent) {
 
 ### `tiny.cookies`
 
-**[WIP]**
+A tiny JavaScript API for handling cookies
 
-- `get`:
-- `set`:
-- `remove`:
-- `isEnabled`:
+#### `tiny.cookies.set(key, value, options)`
+
+Create cookie
+
+- `key`: type `String`. A cookie name.
+- `value`: type `String|Object`. A cookie value.
+- `options`: type `Object`
+  - `expires`: type `Numbre|String`. Define when the cookie will be removed.
+  - `path`: type `String`. A String indicating the path where the cookie is visible.
+  - `domain`: type `string`. A valid domain where the cookie should be visible.
+  - `secure`: type `Boolean`. Indicate if the cookie transmission requires a secure protocol (https).
+
+Example:
+```js
+tiny.cookies.set('ID', 1); // Create session cookie
+tiny.cookies.set('ID', 2, { expires: 14 }); // Creates a cookie that expires in 14 days
+```
 
 
-### `tiny.scroll`
+#### `tiny.cookies.get(key)`
 
-Get the current vertical and horizontal positions of the scroll bars.
+Read cookie
 
-**[WIP]**
+- `key`: type `String` A cookie name to get.
+
+Example:
+```js
+var user_id = tiny.cookies.get('ID');
+```
+
+#### `tiny.cookies.remove(key)`
+
+Delete cookie
+
+- `key`: type `String` A cookie name to delete.
+
+Example:
+```js
+tiny.cookies.remove('ID');
+```
+
+
+#### `tiny.cookies.isEnabled()`
+
+Check if the cookie is supported by the browser and enabled
+
+Example:
+```javascript
+if (tiny.cookies.isEnabled()) {
+  showCookiesPolicy();
+}
+```
+
+
+### `tiny.scroll()`
+
+Get the current vertical and horizontal positions of the scroll bars. Returns an object with `left` and `top` values.
+
+Example:
+```js
+tiny.scroll(); // { left: 0, top: 1200 }
+```
 
 
 ### `tiny.offset(el)`
 
-Get the current offset of an element.
+Get the current offset of an element. Returns an object with `left` and `top` values.
 
 - `el`: An `HTMLElement`
 
-**[WIP]**
+Example:
+```js
+tiny.offset(document.querySelector('header')); // { left: 0, top: 20 }
+```
 
 
 ## Maintenance
