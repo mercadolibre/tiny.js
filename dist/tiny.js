@@ -30,6 +30,7 @@ function ajax(url, settings) {
         context: null,
         dataType: 'text',
         method: 'GET',
+        credentials: 'omit',
         success: noop,
         error: noop,
         complete: noop
@@ -113,6 +114,10 @@ function ajax(url, settings) {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-type': 'application/x-www-form-urlencoded'
         });
+    }
+
+    if (opts.credentials === 'include') {
+        xhr.withCredentials = true;
     }
 
     for (var key in opts.headers) {
@@ -1333,7 +1338,6 @@ function parent(_x, _x2) {
     _function: while (_again) {
         var el = _x,
             tagname = _x2;
-        parentNode = tag = undefined;
         _again = false;
 
         var parentNode = el.parentNode;
@@ -1347,6 +1351,7 @@ function parent(_x, _x2) {
             _x = parentNode;
             _x2 = tag;
             _again = true;
+            parentNode = tag = undefined;
             continue _function;
         }
 
@@ -1356,6 +1361,7 @@ function parent(_x, _x2) {
             _x = parentNode;
             _x2 = tag;
             _again = true;
+            parentNode = tag = undefined;
             continue _function;
         } else if (tagname === undefined) {
             return parentNode;
