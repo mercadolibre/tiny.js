@@ -261,10 +261,20 @@ Performs an asynchronous HTTP (Ajax) request.
     - `context`: type `Object` Every callback will be called in context of `settings.context` or `window` if not provided
     - `dataType`: type `String` A mime type, [json,html,text]
     - `method`: type `String` A valid HTTP method, [GET|POST|PUT|DELETE]
+    - `credentials`: type `Sting` Use the `"include"` value to send cookies in a CORS request. Default is `"omit"`
     - `success`: type `Function` A success callback that receives response data, status and xhr object.
     - `error`: type `Function` An error callback that receives xhr, status and error object.
     - `complete`: A success callback that receives response data, status and xhr object.
 
+Example:
+```js
+tiny.ajax(
+    "http://xxxx/data.json",
+    success: fn,
+    dataType: "json",
+    credentials: "include"
+);
+```
 
 ### `tiny.jsonp(url, settings, callback)`
 

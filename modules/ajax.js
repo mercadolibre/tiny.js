@@ -16,6 +16,7 @@ export default function ajax(url, settings) {
         context: null,
         dataType: 'text',
         method: 'GET',
+        credentials: 'omit',
         success: noop,
         error: noop,
         complete: noop
@@ -101,6 +102,10 @@ export default function ajax(url, settings) {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-type': 'application/x-www-form-urlencoded'
         });
+    }
+
+    if (opts.credentials === 'include') {
+        xhr.withCredentials = true;
     }
 
     for (let key in opts.headers) {
