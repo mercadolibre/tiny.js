@@ -1,18 +1,16 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = ajax;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
+exports.default = ajax;
 
 var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function ajax(url, settings) {
     var args = arguments;
@@ -36,7 +34,7 @@ function ajax(url, settings) {
         complete: noop
     };
 
-    opts = (0, _extend2['default'])(defaults, settings || {});
+    opts = (0, _extend2.default)(defaults, settings || {});
 
     var mimeTypes = {
         'application/json': 'json',
@@ -75,9 +73,9 @@ function ajax(url, settings) {
     xhr.onreadystatechange = function () {
         if (xhr.readyState === 4) {
             var result = undefined;
-            var _status = xhr.status === 1223 ? 204 : xhr.status;
+            var status = xhr.status === 1223 ? 204 : xhr.status;
 
-            if (_status >= 200 && _status < 300 || _status === 304) {
+            if (status >= 200 && status < 300 || status === 304) {
                 var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
                 var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
                 result = xhr.responseText;
@@ -110,7 +108,7 @@ function ajax(url, settings) {
     }
 
     if (opts.method === 'POST') {
-        opts.headers = (0, _extend2['default'])(opts.headers, {
+        opts.headers = (0, _extend2.default)(opts.headers, {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-type': 'application/x-www-form-urlencoded'
         });
@@ -129,12 +127,10 @@ function ajax(url, settings) {
     return this;
 }
 
-module.exports = exports['default'];
-
 },{"./extend":9}],2:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.addClass = addClass;
@@ -151,7 +147,6 @@ var isClassList = !!document.body.classList;
  * @example
  * tiny.addClass(document.body, 'tiny-example');
  */
-
 function addClass(el, className) {
     if (isClassList) {
         el.classList.add(className);
@@ -169,7 +164,6 @@ function addClass(el, className) {
  * @example
  * tiny.removeClass(document.body, 'tiny-example');
  */
-
 function removeClass(el, className) {
     if (isClassList) {
         el.classList.remove(className);
@@ -187,7 +181,6 @@ function removeClass(el, className) {
  * @example
  * tiny.hasClass(document.body, 'tiny-example');
  */
-
 function hasClass(el, className) {
     var exist;
     if (isClassList) {
@@ -204,18 +197,20 @@ var classList = {
     hasClass: hasClass
 };
 
-exports['default'] = classList;
+exports.default = classList;
 
 },{}],3:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = clone;
+exports.default = clone;
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function clone(obj) {
-    if (obj === undefined || typeof obj !== 'object') {
+    if (obj === undefined || (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object') {
         throw new Error('The "obj" parameter is required and must be an object.');
     }
 
@@ -231,22 +226,20 @@ function clone(obj) {
     return copy;
 }
 
-module.exports = exports['default'];
-
 },{}],4:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
 
 var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 var defaults = {
     expires: '', // Empty string for session cookies
@@ -268,9 +261,9 @@ function get(key) {
 
     for (var i = 0; i < l; i++) {
         var parts = collection[i].split('='),
-            _name = decodeURIComponent(parts.shift());
+            name = decodeURIComponent(parts.shift());
 
-        if (key === _name) {
+        if (key === name) {
             value = decodeURIComponent(parts.join('='));
             break;
         }
@@ -281,7 +274,7 @@ function get(key) {
 
 // Then `key` contains an object with keys and values for cookies, `value` contains the options object.
 function set(key, value, options) {
-    options = typeof options === 'object' ? options : { expires: options };
+    options = (typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : { expires: options };
 
     var expires = options.expires != null ? options.expires : defaults.expires;
 
@@ -302,8 +295,8 @@ function set(key, value, options) {
 
     var secure = options.secure || defaults.secure ? ';secure' : '';
 
-    if (typeof value == 'object') {
-        if (Array.isArray(value) || (0, _isPlainObject2['default'])(value)) {
+    if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+        if (Array.isArray(value) || (0, _isPlainObject2.default)(value)) {
             value = JSON.stringify(value);
         } else {
             value = '';
@@ -336,19 +329,28 @@ var cookies = {
     isEnabled: isEnabled
 };
 
-exports['default'] = cookies;
+exports.default = cookies;
 
 /*
  * Escapes only characters that are not allowed in cookies
  */
+
 function encodeCookie(value) {
     return String(value).replace(/[,;"\\=\s%]/g, function (character) {
         return encodeURIComponent(character);
     });
 }
-module.exports = exports['default'];
 
 },{"./isPlainObject":11}],5:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = css;
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
+
 /**
  * Get the value of a computed style for the first element in set of
  * matched elements or set one or more CSS properties for every matched element.
@@ -360,13 +362,6 @@ module.exports = exports['default'];
  *
  * @returns {String|Void}
  */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-exports['default'] = css;
-
 function css(elem, key, value) {
     var args = arguments,
         elements = getElements(elem),
@@ -383,7 +378,7 @@ function css(elem, key, value) {
         setter = function (el) {
             el.style[key] = value;
         };
-    } else if (typeof key === 'object') {
+    } else if ((typeof key === 'undefined' ? 'undefined' : _typeof(key)) === 'object') {
         setter = function (el) {
             Object.keys(key).forEach(function (name) {
                 el.style[name] = key[name];
@@ -412,7 +407,7 @@ function getElStyle(el, prop) {
 function getElements(el) {
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
-    } else if (typeof el === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
+    } else if ((typeof el === 'undefined' ? 'undefined' : _typeof(el)) === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
         return nodeListToArray(el);
     } else {
         return [el];
@@ -430,12 +425,11 @@ function nodeListToArray(elements) {
 
     return arr;
 }
-module.exports = exports['default'];
 
 },{}],6:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
 exports.initEvent = initEvent;
@@ -444,10 +438,6 @@ exports.once = once;
 exports.off = off;
 exports.trigger = trigger;
 
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
-
 var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
@@ -455,6 +445,10 @@ var _extend2 = _interopRequireDefault(_extend);
 var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 var DOM_EVENTS = (function () {
     var events = [];
@@ -483,7 +477,7 @@ var dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
 function getElements(el) {
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
-    } else if (typeof el === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
+    } else if ((typeof el === 'undefined' ? 'undefined' : _typeof(el)) === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
         return nodeListToArray(el);
     } else {
         return [el];
@@ -511,7 +505,7 @@ function initEvent(name, props) {
         isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
         isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
 
-    var data = (0, _extend2['default'])({
+    var data = (0, _extend2.default)({
         bubbles: isDomEvent,
         cancelable: isDomEvent,
         detail: undefined
@@ -556,7 +550,6 @@ function normalizeEventName(event) {
  *
  * tiny.on('p > button', 'click', function(e){}, false);
  */
-
 function on(elem, event, handler, bubbles) {
     getElements(elem).forEach(function (el) {
         el[addHandler](normalizeEventName(event), handler, bubbles || false);
@@ -577,7 +570,6 @@ function on(elem, event, handler, bubbles) {
  * @example
  * tiny.once(document, 'click', function(e){}, false);
  */
-
 function once(elem, event, handler, bubbles) {
     getElements(elem).forEach(function (el) {
         var origHandler = handler;
@@ -604,7 +596,6 @@ function once(elem, event, handler, bubbles) {
  * @example
  * tiny.off(document, 'click', fn);
  */
-
 function off(elem, event, handler) {
     getElements(elem).forEach(function (el) {
         el[removeHandler](normalizeEventName(event), handler);
@@ -622,12 +613,11 @@ function off(elem, event, handler) {
  * @example
  * tiny.trigger('.btn', 'click');
  */
-
 function trigger(elem, event, props) {
     var _this = this;
 
     var name = typeof event === 'string' ? event : event.type;
-    event = typeof event === 'string' || (0, _isPlainObject2['default'])(event) ? initEvent(event, props) : event;
+    event = typeof event === 'string' || (0, _isPlainObject2.default)(event) ? initEvent(event, props) : event;
 
     getElements(elem).forEach(function (el) {
         // handle focus(), blur() by calling them directly
@@ -646,22 +636,20 @@ var DOMEvents = {
     trigger: trigger
 };
 
-exports['default'] = DOMEvents;
+exports.default = DOMEvents;
 
 },{"./extend":9,"./isPlainObject":11}],7:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { 'default': obj };
-}
 
 var _events = require('events');
 
 var _events2 = _interopRequireDefault(_events);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Inherits the prototype methods from one constructor into another.
@@ -677,25 +665,23 @@ var _events2 = _interopRequireDefault(_events);
  * @example
  * tiny.inherits(obj, parent);
  */
-exports['default'] = _events2['default'];
-module.exports = exports['default'];
+exports.default = _events2.default;
 
 },{"events":20}],8:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { 'default': obj };
-}
+exports.onkeyinput = exports.onpointerleave = exports.onpointerenter = exports.onpointertap = exports.onpointermove = exports.onpointerup = exports.onpointerdown = exports.onscroll = exports.onresize = exports.onlayoutchange = undefined;
 
 var _support = require('./support');
 
 var _support2 = _interopRequireDefault(_support);
 
 require('./pointerEvents');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var supportsMouseEvents = !!window.MouseEvent;
 
@@ -706,25 +692,22 @@ var supportsMouseEvents = !!window.MouseEvent;
  * @constant
  * @type {String}
  */
-var onlayoutchange = 'layoutchange';
+var onlayoutchange = exports.onlayoutchange = 'layoutchange';
 
-exports.onlayoutchange = onlayoutchange;
 /**
  * Equivalent to 'resize'.
  * @constant
  * @type {String}
  */
-var onresize = 'resize';
+var onresize = exports.onresize = 'resize';
 
-exports.onresize = onresize;
 /**
  * Equivalent to 'scroll'.
  * @constant
  * @type {String}
  */
-var onscroll = 'scroll';
+var onscroll = exports.onscroll = 'scroll';
 
-exports.onscroll = onscroll;
 /**
  * Equivalent to 'pointerdown' or 'mousedown', depending on browser capabilities.
  *
@@ -732,9 +715,8 @@ exports.onscroll = onscroll;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#dfn-pointerdown | Pointer Events W3C Recommendation
  */
-var onpointerdown = supportsMouseEvents ? 'pointerdown' : 'mousedown';
+var onpointerdown = exports.onpointerdown = supportsMouseEvents ? 'pointerdown' : 'mousedown';
 
-exports.onpointerdown = onpointerdown;
 /**
  * Equivalent to 'pointerup' or 'mouseup', depending on browser capabilities.
  *
@@ -742,9 +724,8 @@ exports.onpointerdown = onpointerdown;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#dfn-pointerup | Pointer Events W3C Recommendation
  */
-var onpointerup = supportsMouseEvents ? 'pointerup' : 'mouseup';
+var onpointerup = exports.onpointerup = supportsMouseEvents ? 'pointerup' : 'mouseup';
 
-exports.onpointerup = onpointerup;
 /**
  * Equivalent to 'pointermove' or 'mousemove', depending on browser capabilities.
  *
@@ -752,9 +733,8 @@ exports.onpointerup = onpointerup;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#dfn-pointermove | Pointer Events W3C Recommendation
  */
-var onpointermove = supportsMouseEvents ? 'pointermove' : 'mousemove';
+var onpointermove = exports.onpointermove = supportsMouseEvents ? 'pointermove' : 'mousemove';
 
-exports.onpointermove = onpointermove;
 /**
  * Equivalent to 'pointertap' or 'click', depending on browser capabilities.
  *
@@ -762,9 +742,8 @@ exports.onpointermove = onpointermove;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | Pointer Events W3C Recommendation
  */
-var onpointertap = _support2['default'].touch && supportsMouseEvents ? 'pointertap' : 'click';
+var onpointertap = exports.onpointertap = _support2.default.touch && supportsMouseEvents ? 'pointertap' : 'click';
 
-exports.onpointertap = onpointertap;
 /**
  * Equivalent to 'pointerenter' or 'mouseenter', depending on browser capabilities.
  *
@@ -772,9 +751,8 @@ exports.onpointertap = onpointertap;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#dfn-pointerenter | Pointer Events W3C Recommendation
  */
-var onpointerenter = supportsMouseEvents ? 'pointerenter' : 'mouseenter';
+var onpointerenter = exports.onpointerenter = supportsMouseEvents ? 'pointerenter' : 'mouseenter';
 
-exports.onpointerenter = onpointerenter;
 /**
  * Equivalent to 'pointerleave' or 'mouseleave', depending on browser capabilities.
  *
@@ -782,9 +760,8 @@ exports.onpointerenter = onpointerenter;
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#dfn-pointerleave | Pointer Events W3C Recommendation
  */
-var onpointerleave = supportsMouseEvents ? 'pointerleave' : 'mouseleave';
+var onpointerleave = exports.onpointerleave = supportsMouseEvents ? 'pointerleave' : 'mouseleave';
 
-exports.onpointerleave = onpointerleave;
 /**
  * The DOM input event that is fired when the value of an <input> or <textarea>
  * element is changed. Equivalent to 'input' or 'keydown', depending on browser
@@ -793,24 +770,23 @@ exports.onpointerleave = onpointerleave;
  * @constant
  * @type {String}
  */
-var onkeyinput = 'oninput' in document.createElement('input') ? 'input' : 'keydown';
-exports.onkeyinput = onkeyinput;
+var onkeyinput = exports.onkeyinput = 'oninput' in document.createElement('input') ? 'input' : 'keydown';
 
 },{"./pointerEvents":17,"./support":19}],9:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = extend;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
+exports.default = extend;
 
 var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function extend() {
     var options = undefined,
@@ -834,7 +810,7 @@ function extend() {
     }
 
     // Handle case when target is a string or something (possible in deep copy)
-    if (typeof target !== 'object' && ! typeof target === 'function') {
+    if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== 'object' && !(typeof target === 'undefined' ? 'undefined' : _typeof(target)) === 'function') {
         target = {};
     }
 
@@ -857,13 +833,13 @@ function extend() {
                 }
 
                 // Recurse if we're merging plain objects or arrays
-                if (deep && copy && ((0, _isPlainObject2['default'])(copy) || (copyIsArray = Array.isArray(copy)))) {
+                if (deep && copy && ((0, _isPlainObject2.default)(copy) || (copyIsArray = Array.isArray(copy)))) {
 
                     if (copyIsArray) {
                         copyIsArray = false;
                         clone = src && Array.isArray(src) ? src : [];
                     } else {
-                        clone = src && (0, _isPlainObject2['default'])(src) ? src : {};
+                        clone = src && (0, _isPlainObject2.default)(src) ? src : {};
                     }
 
                     // Never move original objects, clone them
@@ -881,22 +857,18 @@ function extend() {
     return target;
 }
 
-module.exports = exports['default'];
-
 },{"./isPlainObject":11}],10:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-function _interopRequireDefault(obj) {
-  return obj && obj.__esModule ? obj : { 'default': obj };
-}
 
 var _inherits = require('inherits');
 
 var _inherits2 = _interopRequireDefault(_inherits);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Inherits the prototype methods from one constructor into another.
@@ -912,16 +884,17 @@ var _inherits2 = _interopRequireDefault(_inherits);
  * @example
  * tiny.inherits(obj, parent);
  */
-exports['default'] = _inherits2['default'];
-module.exports = exports['default'];
+exports.default = _inherits2.default;
 
 },{"inherits":21}],11:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = isPlainObject;
+exports.default = isPlainObject;
+
+function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
 function isPlainObject(obj) {
     // Not plain objects:
@@ -933,7 +906,7 @@ function isPlainObject(obj) {
     // - Any object or value whose internal [[Class]] property is not "[object Object]"
     // - DOM nodes
     // - window
-    if (typeof obj !== 'object' || obj.nodeType || obj === obj.window) {
+    if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object' || obj.nodeType || obj === obj.window) {
         return false;
     }
 
@@ -946,18 +919,16 @@ function isPlainObject(obj) {
     return true;
 }
 
-module.exports = exports['default'];
-
 },{}],12:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
 // Based on the https://github.com/pablomoretti/jcors-loader written by Pablo Moretti
 
 /* private */
 
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
 var document = window.document,
     node_createElementScript = document.createElement('script'),
     node_elementScript = document.getElementsByTagName('script')[0],
@@ -1085,24 +1056,21 @@ function loadWithoutCORS() {
 
 var jcors = createCORSRequest ? loadWithCORS : loadWithoutCORS;
 
-exports['default'] = jcors;
-module.exports = exports['default'];
+exports.default = jcors;
 
 },{}],13:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = jsonp;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
+exports.default = jsonp;
 
 var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var noop = function noop() {};
 
@@ -1133,7 +1101,6 @@ var jsonpCount = 0;
  *   cancel();
  * }
  */
-
 function jsonp(url, settings) {
     var id = undefined,
         script = undefined,
@@ -1141,7 +1108,7 @@ function jsonp(url, settings) {
         cleanup = undefined,
         cancel = undefined;
 
-    var opts = (0, _extend2['default'])({
+    var opts = (0, _extend2.default)({
         prefix: '__jsonp',
         param: 'callback',
         timeout: 15000,
@@ -1203,9 +1170,13 @@ function jsonp(url, settings) {
     return cancel;
 }
 
-module.exports = exports['default'];
-
 },{"./extend":9}],14:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = next;
 /**
  * IE8 safe method to get the next element sibling
  *
@@ -1216,13 +1187,6 @@ module.exports = exports['default'];
  * @example
  * tiny.next(el);
  */
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports["default"] = next;
-
 function next(element) {
     function next(el) {
         do {
@@ -1235,19 +1199,13 @@ function next(element) {
     return element.nextElementSibling || next(element);
 }
 
-module.exports = exports["default"];
-
 },{}],15:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports['default'] = offset;
-
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
+exports.default = offset;
 
 var _css = require('./css');
 
@@ -1256,6 +1214,8 @@ var _css2 = _interopRequireDefault(_css);
 var _scroll = require('./scroll');
 
 var _scroll2 = _interopRequireDefault(_scroll);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * Get the current offset of an element.
@@ -1266,17 +1226,16 @@ var _scroll2 = _interopRequireDefault(_scroll);
  * @example
  * tiny.offset(el);
  */
-
 function offset(el) {
     var rect = el.getBoundingClientRect(),
         fixedParent = getFixedParent(el),
-        currentScroll = (0, _scroll2['default'])(),
+        currentScroll = (0, _scroll2.default)(),
         offset = {
         'left': rect.left,
         'top': rect.top
     };
 
-    if ((0, _css2['default'])(el, 'position') !== 'fixed' && fixedParent === null) {
+    if ((0, _css2.default)(el, 'position') !== 'fixed' && fixedParent === null) {
         offset.left += currentScroll.left;
         offset.top += currentScroll.top;
     }
@@ -1303,7 +1262,7 @@ function getFixedParent(el) {
             break;
         }
 
-        if ((0, _css2['default'])(currentParent, 'position') !== 'fixed') {
+        if ((0, _css2.default)(currentParent, 'position') !== 'fixed') {
             currentParent = currentParent.offsetParent;
         } else {
             parent = currentParent;
@@ -1312,9 +1271,14 @@ function getFixedParent(el) {
 
     return parent;
 }
-module.exports = exports['default'];
 
 },{"./css":5,"./scroll":18}],16:[function(require,module,exports){
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = parent;
 /**
  * Get the parent of an element, optionally filtered by a tag
  *
@@ -1325,60 +1289,35 @@ module.exports = exports['default'];
  * @example
  * tiny.parent(el, 'div');
  */
-"use strict";
+function parent(el, tagname) {
+    var parentNode = el.parentNode;
+    var tag = tagname ? tagname.toUpperCase() : tagname;
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports["default"] = parent;
+    if (parentNode === null) {
+        return parentNode;
+    }
 
-function parent(_x, _x2) {
-    var _again = true;
+    if (parentNode.nodeType !== 1) {
+        return parent(parentNode, tag);
+    }
 
-    _function: while (_again) {
-        var el = _x,
-            tagname = _x2;
-        _again = false;
-
-        var parentNode = el.parentNode;
-        var tag = tagname ? tagname.toUpperCase() : tagname;
-
-        if (parentNode === null) {
-            return parentNode;
-        }
-
-        if (parentNode.nodeType !== 1) {
-            _x = parentNode;
-            _x2 = tag;
-            _again = true;
-            parentNode = tag = undefined;
-            continue _function;
-        }
-
-        if (tagname !== undefined && parentNode.tagName === tag) {
-            return parentNode;
-        } else if (tagname !== undefined && parentNode.tagName !== tag) {
-            _x = parentNode;
-            _x2 = tag;
-            _again = true;
-            parentNode = tag = undefined;
-            continue _function;
-        } else if (tagname === undefined) {
-            return parentNode;
-        }
+    if (tagname !== undefined && parentNode.tagName === tag) {
+        return parentNode;
+    } else if (tagname !== undefined && parentNode.tagName !== tag) {
+        return parent(parentNode, tag);
+    } else if (tagname === undefined) {
+        return parentNode;
     }
 }
 
-module.exports = exports["default"];
-
 },{}],17:[function(require,module,exports){
+'use strict';
+
 /**
  * Polyfill for supporting pointer events on every browser
  *
  * @see Based on: <a href="https://github.com/deltakosh/handjs" target="_blank">Hand.js</a>
  */
-'use strict';
-
 (function (window) {
     'use strict';
 
@@ -1946,9 +1885,10 @@ module.exports = exports["default"];
  * });
  */
 (function () {
-    'use strict';
+    'use strict'
 
     // IE8 has no support for custom Mouse Events, fallback to onclick
+    ;
     if (!window.MouseEvent) {
         return;
     }
@@ -2056,6 +1996,12 @@ module.exports = exports["default"];
 })();
 
 },{}],18:[function(require,module,exports){
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+    value: true
+});
+exports.default = scroll;
 /**
  * Get the current vertical and horizontal positions of the scroll bars.
  *
@@ -2065,13 +2011,6 @@ module.exports = exports["default"];
  * @example
  * tiny.scroll().top;
  */
-'use strict';
-
-Object.defineProperty(exports, '__esModule', {
-    value: true
-});
-exports['default'] = scroll;
-
 function scroll() {
     return {
         'left': window.pageXOffset || document.documentElement.scrollLeft || 0,
@@ -2079,12 +2018,10 @@ function scroll() {
     };
 }
 
-module.exports = exports['default'];
-
 },{}],19:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
 var support = {
@@ -2145,7 +2082,7 @@ var support = {
     })()
 };
 
-exports['default'] = support;
+exports.default = support;
 
 /**
  * Checks for the CSS Transitions support (http://www.modernizr.com/)
@@ -2153,6 +2090,7 @@ exports['default'] = support;
  * @function
  * @private
  */
+
 function transitionEnd() {
     var el = document.createElement('tiny');
 
@@ -2200,7 +2138,6 @@ function animationEnd() {
 
     return false;
 }
-module.exports = exports['default'];
 
 },{}],20:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
@@ -2286,18 +2223,11 @@ EventEmitter.prototype.emit = function(type) {
         break;
       // slower
       default:
-        len = arguments.length;
-        args = new Array(len - 1);
-        for (i = 1; i < len; i++)
-          args[i - 1] = arguments[i];
+        args = Array.prototype.slice.call(arguments, 1);
         handler.apply(this, args);
     }
   } else if (isObject(handler)) {
-    len = arguments.length;
-    args = new Array(len - 1);
-    for (i = 1; i < len; i++)
-      args[i - 1] = arguments[i];
-
+    args = Array.prototype.slice.call(arguments, 1);
     listeners = handler.slice();
     len = listeners.length;
     for (i = 0; i < len; i++)
@@ -2335,7 +2265,6 @@ EventEmitter.prototype.addListener = function(type, listener) {
 
   // Check for listener leak
   if (isObject(this._events[type]) && !this._events[type].warned) {
-    var m;
     if (!isUndefined(this._maxListeners)) {
       m = this._maxListeners;
     } else {
@@ -2457,7 +2386,7 @@ EventEmitter.prototype.removeAllListeners = function(type) {
 
   if (isFunction(listeners)) {
     this.removeListener(type, listeners);
-  } else {
+  } else if (listeners) {
     // LIFO order
     while (listeners.length)
       this.removeListener(type, listeners[listeners.length - 1]);
@@ -2478,15 +2407,20 @@ EventEmitter.prototype.listeners = function(type) {
   return ret;
 };
 
+EventEmitter.prototype.listenerCount = function(type) {
+  if (this._events) {
+    var evlistener = this._events[type];
+
+    if (isFunction(evlistener))
+      return 1;
+    else if (evlistener)
+      return evlistener.length;
+  }
+  return 0;
+};
+
 EventEmitter.listenerCount = function(emitter, type) {
-  var ret;
-  if (!emitter._events || !emitter._events[type])
-    ret = 0;
-  else if (isFunction(emitter._events[type]))
-    ret = 1;
-  else
-    ret = emitter._events[type].length;
-  return ret;
+  return emitter.listenerCount(type);
 };
 
 function isFunction(arg) {
@@ -2533,123 +2467,111 @@ if (typeof Object.create === 'function') {
 },{}],22:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, '__esModule', {
+Object.defineProperty(exports, "__esModule", {
     value: true
 });
 
-function _interopRequireWildcard(obj) {
-    if (obj && obj.__esModule) {
-        return obj;
-    } else {
-        var newObj = {};if (obj != null) {
-            for (var key in obj) {
-                if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key];
-            }
-        }newObj['default'] = obj;return newObj;
-    }
-}
+var _clone = require('./modules/clone');
 
-function _interopRequireDefault(obj) {
-    return obj && obj.__esModule ? obj : { 'default': obj };
-}
+var _clone2 = _interopRequireDefault(_clone);
 
-var _modulesClone = require('./modules/clone');
+var _extend = require('./modules/extend');
 
-var _modulesClone2 = _interopRequireDefault(_modulesClone);
+var _extend2 = _interopRequireDefault(_extend);
 
-var _modulesExtend = require('./modules/extend');
+var _inherits = require('./modules/inherits');
 
-var _modulesExtend2 = _interopRequireDefault(_modulesExtend);
+var _inherits2 = _interopRequireDefault(_inherits);
 
-var _modulesInherits = require('./modules/inherits');
+var _eventEmitter = require('./modules/eventEmitter');
 
-var _modulesInherits2 = _interopRequireDefault(_modulesInherits);
+var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
 
-var _modulesEventEmitter = require('./modules/eventEmitter');
+var _ajax = require('./modules/ajax');
 
-var _modulesEventEmitter2 = _interopRequireDefault(_modulesEventEmitter);
+var _ajax2 = _interopRequireDefault(_ajax);
 
-var _modulesAjax = require('./modules/ajax');
+var _jsonp = require('./modules/jsonp');
 
-var _modulesAjax2 = _interopRequireDefault(_modulesAjax);
+var _jsonp2 = _interopRequireDefault(_jsonp);
 
-var _modulesJsonp = require('./modules/jsonp');
+var _jcors = require('./modules/jcors');
 
-var _modulesJsonp2 = _interopRequireDefault(_modulesJsonp);
+var _jcors2 = _interopRequireDefault(_jcors);
 
-var _modulesJcors = require('./modules/jcors');
+var _isPlainObject = require('./modules/isPlainObject');
 
-var _modulesJcors2 = _interopRequireDefault(_modulesJcors);
+var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-var _modulesIsPlainObject = require('./modules/isPlainObject');
+var _support = require('./modules/support');
 
-var _modulesIsPlainObject2 = _interopRequireDefault(_modulesIsPlainObject);
+var _support2 = _interopRequireDefault(_support);
 
-var _modulesSupport = require('./modules/support');
+var _classList = require('./modules/classList');
 
-var _modulesSupport2 = _interopRequireDefault(_modulesSupport);
+var _classList2 = _interopRequireDefault(_classList);
 
-var _modulesClassList = require('./modules/classList');
+var _parent = require('./modules/parent');
 
-var _modulesClassList2 = _interopRequireDefault(_modulesClassList);
+var _parent2 = _interopRequireDefault(_parent);
 
-var _modulesParent = require('./modules/parent');
+var _next = require('./modules/next');
 
-var _modulesParent2 = _interopRequireDefault(_modulesParent);
+var _next2 = _interopRequireDefault(_next);
 
-var _modulesNext = require('./modules/next');
+var _css = require('./modules/css');
 
-var _modulesNext2 = _interopRequireDefault(_modulesNext);
+var _css2 = _interopRequireDefault(_css);
 
-var _modulesCss = require('./modules/css');
+var _offset = require('./modules/offset');
 
-var _modulesCss2 = _interopRequireDefault(_modulesCss);
+var _offset2 = _interopRequireDefault(_offset);
 
-var _modulesOffset = require('./modules/offset');
+var _scroll = require('./modules/scroll');
 
-var _modulesOffset2 = _interopRequireDefault(_modulesOffset);
+var _scroll2 = _interopRequireDefault(_scroll);
 
-var _modulesScroll = require('./modules/scroll');
+var _cookies = require('./modules/cookies');
 
-var _modulesScroll2 = _interopRequireDefault(_modulesScroll);
+var _cookies2 = _interopRequireDefault(_cookies);
 
-var _modulesCookies = require('./modules/cookies');
+var _domEvents = require('./modules/domEvents');
 
-var _modulesCookies2 = _interopRequireDefault(_modulesCookies);
+var _domEvents2 = _interopRequireDefault(_domEvents);
 
-var _modulesDomEvents = require('./modules/domEvents');
+var _events = require('./modules/events');
 
-var _modulesDomEvents2 = _interopRequireDefault(_modulesDomEvents);
+var events = _interopRequireWildcard(_events);
 
-var _modulesEvents = require('./modules/events');
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
 
-var events = _interopRequireWildcard(_modulesEvents);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var tiny = {
-    clone: _modulesClone2['default'],
-    extend: _modulesExtend2['default'],
-    inherits: _modulesInherits2['default'],
-    EventEmitter: _modulesEventEmitter2['default'],
-    ajax: _modulesAjax2['default'],
-    jsonp: _modulesJsonp2['default'],
-    jcors: _modulesJcors2['default'],
-    isPlainObject: _modulesIsPlainObject2['default'],
-    support: _modulesSupport2['default'],
-    addClass: _modulesClassList2['default'].addClass,
-    removeClass: _modulesClassList2['default'].removeClass,
-    hasClass: _modulesClassList2['default'].hasClass,
-    parent: _modulesParent2['default'],
-    next: _modulesNext2['default'],
-    css: _modulesCss2['default'],
-    offset: _modulesOffset2['default'],
-    scroll: _modulesScroll2['default'],
-    cookies: _modulesCookies2['default'],
-    on: _modulesDomEvents2['default'].on,
-    bind: _modulesDomEvents2['default'].on,
-    one: _modulesDomEvents2['default'].once,
-    once: _modulesDomEvents2['default'].once,
-    off: _modulesDomEvents2['default'].off,
-    trigger: _modulesDomEvents2['default'].trigger
+    clone: _clone2.default,
+    extend: _extend2.default,
+    inherits: _inherits2.default,
+    EventEmitter: _eventEmitter2.default,
+    ajax: _ajax2.default,
+    jsonp: _jsonp2.default,
+    jcors: _jcors2.default,
+    isPlainObject: _isPlainObject2.default,
+    support: _support2.default,
+    addClass: _classList2.default.addClass,
+    removeClass: _classList2.default.removeClass,
+    hasClass: _classList2.default.hasClass,
+    parent: _parent2.default,
+    next: _next2.default,
+    css: _css2.default,
+    offset: _offset2.default,
+    scroll: _scroll2.default,
+    cookies: _cookies2.default,
+    on: _domEvents2.default.on,
+    bind: _domEvents2.default.on,
+    one: _domEvents2.default.once,
+    once: _domEvents2.default.once,
+    off: _domEvents2.default.off,
+    trigger: _domEvents2.default.trigger
 };
 
 for (var e in events) {
@@ -2660,7 +2582,6 @@ if (typeof window !== 'undefined') {
     window.tiny = tiny;
 }
 
-exports['default'] = tiny;
-module.exports = exports['default'];
+exports.default = tiny;
 
 },{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/events":8,"./modules/extend":9,"./modules/inherits":10,"./modules/isPlainObject":11,"./modules/jcors":12,"./modules/jsonp":13,"./modules/next":14,"./modules/offset":15,"./modules/parent":16,"./modules/scroll":18,"./modules/support":19}]},{},[22]);
