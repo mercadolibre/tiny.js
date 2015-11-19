@@ -26,11 +26,16 @@ let removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
 let dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
 
 function getElements(el) {
+    if (!el) {
+        return [];
+    }
+
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
-    } else if (typeof el === 'object' &&
-        /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) &&
-        Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
+    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) &&
+        (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) &&
+        el.length > 0 && el[0].nodeType > 0) {
+
         return nodeListToArray(el);
     } else {
         return [el];

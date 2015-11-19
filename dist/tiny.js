@@ -405,9 +405,14 @@ function getElStyle(el, prop) {
 }
 
 function getElements(el) {
+    if (!el) {
+        return [];
+    }
+
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
-    } else if ((typeof el === 'undefined' ? 'undefined' : _typeof(el)) === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
+    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) && el.length > 0 && el[0].nodeType > 0) {
+
         return nodeListToArray(el);
     } else {
         return [el];
@@ -448,8 +453,6 @@ var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
 var DOM_EVENTS = (function () {
     var events = [];
     for (var attr in document) {
@@ -475,9 +478,14 @@ var removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
 var dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
 
 function getElements(el) {
+    if (!el) {
+        return [];
+    }
+
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
-    } else if ((typeof el === 'undefined' ? 'undefined' : _typeof(el)) === 'object' && /^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && Object.prototype.hasOwnProperty.call(el, 'length') && el.length > 0 && el[0].nodeType > 0) {
+    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) && el.length > 0 && el[0].nodeType > 0) {
+
         return nodeListToArray(el);
     } else {
         return [el];

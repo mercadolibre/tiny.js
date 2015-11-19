@@ -4,6 +4,7 @@ describe('tiny.css', () => {
     let container = document.createElement('div');
 
     before(function() {
+        container.innerHTML = '<ul class="list"><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li><li class="list-item"></li></ul>';
         document.body.appendChild(container);
     });
 
@@ -34,5 +35,13 @@ describe('tiny.css', () => {
         expect(container.style.position).to.equal('fixed');
         expect(container.style.top).to.equal('100px');
         expect(container.style.left).to.equal('200px');
+    });
+
+    it('should set the style to an array of elements', () => {
+        let children = container.querySelectorAll('.list-item');
+
+        css(children, 'display', 'inline-block');
+        expect(children[0].style.display).to.equal('inline-block');
+        expect(children[1].style.display).to.equal('inline-block');
     });
 });
