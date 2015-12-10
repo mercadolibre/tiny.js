@@ -60,32 +60,57 @@ export default function ajax(url, settings) {
 
     let xhr = new XMLHttpRequest();
 
-    xhr.onreadystatechange = function() {
-        if (xhr.readyState === 4) {
+    let useXDR = opts.credentials === 'include' && !('withCredentials' in xhr) && 'XDomainRequest' in window;
+
+    if (useXDR) {
+        // Use XDomainRequest instead of XMLHttpRequest for IE<=9 and when CORS is requested
+        xhr = new XDomainRequest();
+        xhr.onload = function () {
+            let mime = xhr.contentType;
+            let dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'json';
             let result;
-            let status = (xhr.status === 1223) ? 204 : xhr.status;
 
-            if ((status >= 200 && status < 300) || status === 304) {
-                let mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
-                let dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+            if (dataType === 'json') {
+                try {
+                    result = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    result = xhr.responseText;
+                }
+            } else {
                 result = xhr.responseText;
+            }
+            success(result, xhr);
+        };
+    } else {
+        // Still cannot use xhr.onload for normal xhr due to required support of IE8 which
+        // has no `onload` event https://msdn.microsoft.com/en-us/library/ms535874(v=vs.85).aspx#events
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4) {
+                let result;
+                let status = (xhr.status === 1223) ? 204 : xhr.status;
 
-                if (dataType === 'json') {
-                    try {
-                        result = JSON.parse(result);
-                    } catch (e) {
-                        result = xhr.responseText;
+                if ((status >= 200 && status < 300) || status === 304) {
+                    let mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
+                    let dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+                    result = xhr.responseText;
+
+                    if (dataType === 'json') {
+                        try {
+                            result = JSON.parse(result);
+                        } catch (e) {
+                            result = xhr.responseText;
+                        }
                     }
+
+                    success(result, xhr);
+                } else {
+                    error(new Error(xhr.statusText), 'error', xhr, opts);
                 }
 
-                success(result, xhr, opts);
-            } else {
-                error(new Error(xhr.statusText), 'error', xhr, opts);
+                return;
             }
-
-            return;
-        }
-    };
+        };
+    }
 
     xhr.onerror = function() {
         error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
@@ -108,8 +133,10 @@ export default function ajax(url, settings) {
         xhr.withCredentials = true;
     }
 
-    for (let key in opts.headers) {
-        xhr.setRequestHeader(key, opts.headers[key]);
+    if (!useXDR) {
+        for (let key in opts.headers) {
+            xhr.setRequestHeader(key, opts.headers[key]);
+        }
     }
 
     xhr.send(opts.data);
