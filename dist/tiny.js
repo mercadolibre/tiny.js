@@ -4,13 +4,13 @@
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = ajax;
+exports['default'] = ajax;
 
 var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 function ajax(url, settings) {
     var args = arguments;
@@ -34,7 +34,7 @@ function ajax(url, settings) {
         complete: noop
     };
 
-    opts = (0, _extend2.default)(defaults, settings || {});
+    opts = (0, _extend2['default'])(defaults, settings || {});
 
     var mimeTypes = {
         'application/json': 'json',
@@ -70,32 +70,57 @@ function ajax(url, settings) {
 
     var xhr = new XMLHttpRequest();
 
-    xhr.onreadystatechange = function () {
-        if (xhr.readyState === 4) {
+    var useXDR = opts.credentials === 'include' && !('withCredentials' in xhr) && 'XDomainRequest' in window;
+
+    if (useXDR) {
+        // Use XDomainRequest instead of XMLHttpRequest for IE<=9 and when CORS is requested
+        xhr = new XDomainRequest();
+        xhr.onload = function () {
+            var mime = xhr.contentType;
+            var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'json';
             var result = undefined;
-            var status = xhr.status === 1223 ? 204 : xhr.status;
 
-            if (status >= 200 && status < 300 || status === 304) {
-                var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
-                var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+            if (dataType === 'json') {
+                try {
+                    result = JSON.parse(xhr.responseText);
+                } catch (e) {
+                    result = xhr.responseText;
+                }
+            } else {
                 result = xhr.responseText;
+            }
+            success(result, xhr);
+        };
+    } else {
+        // Still cannot use xhr.onload for normal xhr due to required support of IE8 which
+        // has no `onload` event https://msdn.microsoft.com/en-us/library/ms535874(v=vs.85).aspx#events
+        xhr.onreadystatechange = function () {
+            if (xhr.readyState === 4) {
+                var result = undefined;
+                var status = xhr.status === 1223 ? 204 : xhr.status;
 
-                if (dataType === 'json') {
-                    try {
-                        result = JSON.parse(result);
-                    } catch (e) {
-                        result = xhr.responseText;
+                if (status >= 200 && status < 300 || status === 304) {
+                    var mime = /([\/a-z]+)(;|\s|$)/.exec(xhr.getResponseHeader('content-type'));
+                    var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'text';
+                    result = xhr.responseText;
+
+                    if (dataType === 'json') {
+                        try {
+                            result = JSON.parse(result);
+                        } catch (e) {
+                            result = xhr.responseText;
+                        }
                     }
+
+                    success(result, xhr);
+                } else {
+                    error(new Error(xhr.statusText), 'error', xhr, opts);
                 }
 
-                success(result, xhr, opts);
-            } else {
-                error(new Error(xhr.statusText), 'error', xhr, opts);
+                return;
             }
-
-            return;
-        }
-    };
+        };
+    }
 
     xhr.onerror = function () {
         error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
@@ -108,7 +133,7 @@ function ajax(url, settings) {
     }
 
     if (opts.method === 'POST') {
-        opts.headers = (0, _extend2.default)(opts.headers, {
+        opts.headers = (0, _extend2['default'])(opts.headers, {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-type': 'application/x-www-form-urlencoded'
         });
@@ -118,8 +143,10 @@ function ajax(url, settings) {
         xhr.withCredentials = true;
     }
 
-    for (var key in opts.headers) {
-        xhr.setRequestHeader(key, opts.headers[key]);
+    if (!useXDR) {
+        for (var key in opts.headers) {
+            xhr.setRequestHeader(key, opts.headers[key]);
+        }
     }
 
     xhr.send(opts.data);
@@ -197,7 +224,7 @@ var classList = {
     hasClass: hasClass
 };
 
-exports.default = classList;
+exports['default'] = classList;
 
 },{}],3:[function(require,module,exports){
 'use strict';
@@ -205,7 +232,7 @@ exports.default = classList;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = clone;
+exports['default'] = clone;
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -237,7 +264,7 @@ var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -296,7 +323,7 @@ function set(key, value, options) {
     var secure = options.secure || defaults.secure ? ';secure' : '';
 
     if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
-        if (Array.isArray(value) || (0, _isPlainObject2.default)(value)) {
+        if (Array.isArray(value) || (0, _isPlainObject2['default'])(value)) {
             value = JSON.stringify(value);
         } else {
             value = '';
@@ -329,7 +356,7 @@ var cookies = {
     isEnabled: isEnabled
 };
 
-exports.default = cookies;
+exports['default'] = cookies;
 
 /*
  * Escapes only characters that are not allowed in cookies
@@ -347,7 +374,7 @@ function encodeCookie(value) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = css;
+exports['default'] = css;
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -451,7 +478,7 @@ var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var DOM_EVENTS = (function () {
     var events = [];
@@ -513,7 +540,7 @@ function initEvent(name, props) {
         isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
         isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
 
-    var data = (0, _extend2.default)({
+    var data = (0, _extend2['default'])({
         bubbles: isDomEvent,
         cancelable: isDomEvent,
         detail: undefined
@@ -625,7 +652,7 @@ function trigger(elem, event, props) {
     var _this = this;
 
     var name = typeof event === 'string' ? event : event.type;
-    event = typeof event === 'string' || (0, _isPlainObject2.default)(event) ? initEvent(event, props) : event;
+    event = typeof event === 'string' || (0, _isPlainObject2['default'])(event) ? initEvent(event, props) : event;
 
     getElements(elem).forEach(function (el) {
         // handle focus(), blur() by calling them directly
@@ -644,7 +671,7 @@ var DOMEvents = {
     trigger: trigger
 };
 
-exports.default = DOMEvents;
+exports['default'] = DOMEvents;
 
 },{"./extend":9,"./isPlainObject":11}],7:[function(require,module,exports){
 'use strict';
@@ -657,7 +684,7 @@ var _events = require('events');
 
 var _events2 = _interopRequireDefault(_events);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 /**
  * Inherits the prototype methods from one constructor into another.
@@ -673,7 +700,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @example
  * tiny.inherits(obj, parent);
  */
-exports.default = _events2.default;
+exports['default'] = _events2['default'];
 
 },{"events":20}],8:[function(require,module,exports){
 'use strict';
@@ -689,7 +716,7 @@ var _support2 = _interopRequireDefault(_support);
 
 require('./pointerEvents');
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var supportsMouseEvents = !!window.MouseEvent;
 
@@ -750,7 +777,7 @@ var onpointermove = exports.onpointermove = supportsMouseEvents ? 'pointermove' 
  * @type {String}
  * @link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | Pointer Events W3C Recommendation
  */
-var onpointertap = exports.onpointertap = _support2.default.touch && supportsMouseEvents ? 'pointertap' : 'click';
+var onpointertap = exports.onpointertap = _support2['default'].touch && supportsMouseEvents ? 'pointertap' : 'click';
 
 /**
  * Equivalent to 'pointerenter' or 'mouseenter', depending on browser capabilities.
@@ -786,13 +813,13 @@ var onkeyinput = exports.onkeyinput = 'oninput' in document.createElement('input
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = extend;
+exports['default'] = extend;
 
 var _isPlainObject = require('./isPlainObject');
 
 var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -841,13 +868,13 @@ function extend() {
                 }
 
                 // Recurse if we're merging plain objects or arrays
-                if (deep && copy && ((0, _isPlainObject2.default)(copy) || (copyIsArray = Array.isArray(copy)))) {
+                if (deep && copy && ((0, _isPlainObject2['default'])(copy) || (copyIsArray = Array.isArray(copy)))) {
 
                     if (copyIsArray) {
                         copyIsArray = false;
                         clone = src && Array.isArray(src) ? src : [];
                     } else {
-                        clone = src && (0, _isPlainObject2.default)(src) ? src : {};
+                        clone = src && (0, _isPlainObject2['default'])(src) ? src : {};
                     }
 
                     // Never move original objects, clone them
@@ -876,7 +903,7 @@ var _inherits = require('inherits');
 
 var _inherits2 = _interopRequireDefault(_inherits);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 /**
  * Inherits the prototype methods from one constructor into another.
@@ -892,7 +919,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
  * @example
  * tiny.inherits(obj, parent);
  */
-exports.default = _inherits2.default;
+exports['default'] = _inherits2['default'];
 
 },{"inherits":21}],11:[function(require,module,exports){
 'use strict';
@@ -900,7 +927,7 @@ exports.default = _inherits2.default;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = isPlainObject;
+exports['default'] = isPlainObject;
 
 function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
 
@@ -1064,7 +1091,7 @@ function loadWithoutCORS() {
 
 var jcors = createCORSRequest ? loadWithCORS : loadWithoutCORS;
 
-exports.default = jcors;
+exports['default'] = jcors;
 
 },{}],13:[function(require,module,exports){
 'use strict';
@@ -1072,13 +1099,13 @@ exports.default = jcors;
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = jsonp;
+exports['default'] = jsonp;
 
 var _extend = require('./extend');
 
 var _extend2 = _interopRequireDefault(_extend);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var noop = function noop() {};
 
@@ -1116,7 +1143,7 @@ function jsonp(url, settings) {
         cleanup = undefined,
         cancel = undefined;
 
-    var opts = (0, _extend2.default)({
+    var opts = (0, _extend2['default'])({
         prefix: '__jsonp',
         param: 'callback',
         timeout: 15000,
@@ -1184,7 +1211,7 @@ function jsonp(url, settings) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = next;
+exports["default"] = next;
 /**
  * IE8 safe method to get the next element sibling
  *
@@ -1213,7 +1240,7 @@ function next(element) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = offset;
+exports['default'] = offset;
 
 var _css = require('./css');
 
@@ -1223,7 +1250,7 @@ var _scroll = require('./scroll');
 
 var _scroll2 = _interopRequireDefault(_scroll);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 /**
  * Get the current offset of an element.
@@ -1237,13 +1264,13 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 function offset(el) {
     var rect = el.getBoundingClientRect(),
         fixedParent = getFixedParent(el),
-        currentScroll = (0, _scroll2.default)(),
+        currentScroll = (0, _scroll2['default'])(),
         offset = {
         'left': rect.left,
         'top': rect.top
     };
 
-    if ((0, _css2.default)(el, 'position') !== 'fixed' && fixedParent === null) {
+    if ((0, _css2['default'])(el, 'position') !== 'fixed' && fixedParent === null) {
         offset.left += currentScroll.left;
         offset.top += currentScroll.top;
     }
@@ -1270,7 +1297,7 @@ function getFixedParent(el) {
             break;
         }
 
-        if ((0, _css2.default)(currentParent, 'position') !== 'fixed') {
+        if ((0, _css2['default'])(currentParent, 'position') !== 'fixed') {
             currentParent = currentParent.offsetParent;
         } else {
             parent = currentParent;
@@ -1286,7 +1313,7 @@ function getFixedParent(el) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = parent;
+exports["default"] = parent;
 /**
  * Get the parent of an element, optionally filtered by a tag
  *
@@ -1510,8 +1537,9 @@ function parent(el, tagname) {
         return node.__chGlobalRegisteredEvents && node.__chGlobalRegisteredEvents[eventName];
     };
     var findEventRegisteredNode = function findEventRegisteredNode(node, eventName) {
-        while (node && !checkEventRegistration(node, eventName)) node = node.parentNode;
-        if (node) return node;else if (checkEventRegistration(window, eventName)) return window;
+        while (node && !checkEventRegistration(node, eventName)) {
+            node = node.parentNode;
+        }if (node) return node;else if (checkEventRegistration(window, eventName)) return window;
     };
 
     var generateTouchEventProxyIfRegistered = function generateTouchEventProxyIfRegistered(eventName, touchPoint, target, eventObject, canBubble, relatedTarget) {
@@ -1725,7 +1753,9 @@ function parent(el, tagname) {
                 nodelist.push(node);
             node = node.parentNode;
         }
-        while (nodelist.length > 0) generateProxy(nodelist.pop());
+        while (nodelist.length > 0) {
+            generateProxy(nodelist.pop());
+        }
     }
 
     //generateProxy receives a node to dispatch the event
@@ -2009,7 +2039,7 @@ function parent(el, tagname) {
 Object.defineProperty(exports, "__esModule", {
     value: true
 });
-exports.default = scroll;
+exports['default'] = scroll;
 /**
  * Get the current vertical and horizontal positions of the scroll bars.
  *
@@ -2090,7 +2120,7 @@ var support = {
     })()
 };
 
-exports.default = support;
+exports['default'] = support;
 
 /**
  * Checks for the CSS Transitions support (http://www.modernizr.com/)
@@ -2551,35 +2581,35 @@ var _events = require('./modules/events');
 
 var events = _interopRequireWildcard(_events);
 
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj.default = obj; return newObj; } }
+function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var tiny = {
-    clone: _clone2.default,
-    extend: _extend2.default,
-    inherits: _inherits2.default,
-    EventEmitter: _eventEmitter2.default,
-    ajax: _ajax2.default,
-    jsonp: _jsonp2.default,
-    jcors: _jcors2.default,
-    isPlainObject: _isPlainObject2.default,
-    support: _support2.default,
-    addClass: _classList2.default.addClass,
-    removeClass: _classList2.default.removeClass,
-    hasClass: _classList2.default.hasClass,
-    parent: _parent2.default,
-    next: _next2.default,
-    css: _css2.default,
-    offset: _offset2.default,
-    scroll: _scroll2.default,
-    cookies: _cookies2.default,
-    on: _domEvents2.default.on,
-    bind: _domEvents2.default.on,
-    one: _domEvents2.default.once,
-    once: _domEvents2.default.once,
-    off: _domEvents2.default.off,
-    trigger: _domEvents2.default.trigger
+    clone: _clone2['default'],
+    extend: _extend2['default'],
+    inherits: _inherits2['default'],
+    EventEmitter: _eventEmitter2['default'],
+    ajax: _ajax2['default'],
+    jsonp: _jsonp2['default'],
+    jcors: _jcors2['default'],
+    isPlainObject: _isPlainObject2['default'],
+    support: _support2['default'],
+    addClass: _classList2['default'].addClass,
+    removeClass: _classList2['default'].removeClass,
+    hasClass: _classList2['default'].hasClass,
+    parent: _parent2['default'],
+    next: _next2['default'],
+    css: _css2['default'],
+    offset: _offset2['default'],
+    scroll: _scroll2['default'],
+    cookies: _cookies2['default'],
+    on: _domEvents2['default'].on,
+    bind: _domEvents2['default'].on,
+    one: _domEvents2['default'].once,
+    once: _domEvents2['default'].once,
+    off: _domEvents2['default'].off,
+    trigger: _domEvents2['default'].trigger
 };
 
 for (var e in events) {
@@ -2590,6 +2620,6 @@ if (typeof window !== 'undefined') {
     window.tiny = tiny;
 }
 
-exports.default = tiny;
+exports['default'] = tiny;
 
 },{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/events":8,"./modules/extend":9,"./modules/inherits":10,"./modules/isPlainObject":11,"./modules/jcors":12,"./modules/jsonp":13,"./modules/next":14,"./modules/offset":15,"./modules/parent":16,"./modules/scroll":18,"./modules/support":19}]},{},[22]);
