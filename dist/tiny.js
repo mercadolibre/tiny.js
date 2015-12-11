@@ -1831,6 +1831,10 @@ function parent(el, tagname) {
                         var touchPoint = eventObject.changedTouches[i];
                         var currentTarget = previousTargets[touchPoint.identifier];
 
+                        if (!currentTarget) {
+                            continue;
+                        }
+
                         generateTouchEventProxyIfRegistered('pointerup', touchPoint, currentTarget, eventObject, true);
                         generateTouchEventProxyIfRegistered('pointerout', touchPoint, currentTarget, eventObject, true);
 
@@ -1838,6 +1842,8 @@ function parent(el, tagname) {
                         dispatchPointerLeave(currentTarget, null, function (targetNode) {
                             generateTouchEventProxy('pointerleave', touchPoint, targetNode, eventObject, false);
                         });
+
+                        delete previousTargets[touchPoint.identifier];
                     }
                     setTouchTimer();
                 });
@@ -1850,6 +1856,18 @@ function parent(el, tagname) {
 
                         // If force preventDefault
                         if (currentTarget && checkPreventDefault(currentTarget) === true) eventObject.preventDefault();
+
+                        // Viewport manipulation fires non-cancelable touchmove
+                        if (!eventObject.cancelable) {
+                            delete previousTargets[touchPoint.identifier];
+                            generateTouchEventProxyIfRegistered('pointercancel', touchPoint, currentTarget, eventObject, true);
+                            generateTouchEventProxyIfRegistered('pointerout', touchPoint, currentTarget, eventObject, true);
+
+                            dispatchPointerLeave(currentTarget, null, function (targetNode) {
+                                generateTouchEventProxy('pointerleave', touchPoint, targetNode, eventObject, false);
+                            });
+                            continue;
+                        }
 
                         generateTouchEventProxyIfRegistered('pointermove', touchPoint, currentTarget, eventObject, true);
 
@@ -2022,6 +2040,12 @@ function parent(el, tagname) {
     function makePointertapEvent(sourceEvent) {
         var evt = document.createEvent('MouseEvents');
         var newTarget = document.elementFromPoint(sourceEvent.clientX, sourceEvent.clientY);
+
+        // According to the MDN docs if the specified point is outside the visible bounds of the document
+        // or either coordinate is negative, the result is null
+        if (!newTarget) {
+            return null;
+        }
 
         // TODO: Replace 'initMouseEvent' with 'new MouseEvent'
         evt.initMouseEvent('pointertap', true, true, window, 1, sourceEvent.screenX, sourceEvent.screenY, sourceEvent.clientX, sourceEvent.clientY, sourceEvent.ctrlKey, sourceEvent.altKey, sourceEvent.shiftKey, sourceEvent.metaKey, sourceEvent.button, newTarget);
