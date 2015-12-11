@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', function () {
+    togglePointerTap({ target: tap });
+    tap.onclick = togglePointerTap;
     togglePointerUpDown({ target: updown });
     updown.onclick = togglePointerUpDown;
     togglePointerMove({ target: move });
@@ -29,6 +31,12 @@ function clearLog() {
         log.removeChild(log.firstChild);
 }
 
+function togglePointerTap(e) {
+    var isEnabling = e.target.checked;
+    toggleEvent(div1, 'pointertap', isEnabling);
+    toggleEvent(div2, 'pointertap', isEnabling);
+    toggleEvent(div3, 'pointertap', isEnabling);
+}
 function togglePointerUpDown(e) {
     var isEnabling = e.target.checked;
     //toggleEvent(window, 'pointerdown', isEnabling);
