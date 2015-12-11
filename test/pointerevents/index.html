@@ -6,13 +6,17 @@
     <title>Pointer Events sandbox</title>
 
     <style>
-        #testpanel { margin: 50px }
+        #testpanel { margin: 20px 10px }
 
         .height { height: 100px; }
-        .first { width: 350px; background-color: gray }
-        .second { width: 250px; background-color: #555555 }
-        .third { width: 150px; background-color: black }
+        .first { width: 100%; margin: 20px 0; background-color: gray }
+        .second { width: 66%; background-color: #555555 }
+        .third { width: 50%; background-color: black }
         .touch-none { -ms-touch-action: none; pointer-events: none; background-color: #c00; cursor: not-allowed }
+
+        @media (min-width: 768px) {
+            #testpanel { margin: 50px }
+        }
     </style>
 
     <script src="../../modules/pointerEvents.js"></script>
@@ -35,7 +39,7 @@
             </div>
         </div>
     </div>
-    <input id="clear" type="button" value="Clear" />
+    <button id="clear" type="button">Clear</button>
 </div>
 <div id="log">
 </div>
