@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Pointer Events sandbox</title>
+
+    <style>
+        #testpanel { margin: 20px 10px }
+
+        .height { height: 100px; }
+        .first { width: 100%; margin: 20px 0; background-color: gray }
+        .second { width: 66%; background-color: #555555 }
+        .third { width: 50%; background-color: black }
+        .touch-none { -ms-touch-action: none; pointer-events: none; background-color: #c00; cursor: not-allowed }
+
+        @media (min-width: 768px) {
+            #testpanel { margin: 50px }
+        }
+    </style>
+
+    <script src="../../modules/pointerEvents.js"></script>
+    <script src="index.js"></script>
+</head>
+<body>
+<div id="testpanel">
+    <input id="tap" type="checkbox" /><label for="tap">Tap</label><br />
+    <input id="updown" type="checkbox" /><label for="updown">Up/Down</label><br />
+    <input id="move" type="checkbox" /><label for="move">Move</label><br />
+    <input id="overout" type="checkbox" /><label for="overout">Over/Out</label><br />
+    <input id="enterleave" type="checkbox" /><label for="enterleave">Enter/Leave</label><br />
+    <input id="cancel" type="checkbox" /><label for="cancel">Cancel</label>
+
+    <div id="div1" class="first">
+        <div id="div2" class="second">
+            <div id="div3" class="height third touch-none">
+            </div>
+            <div class="height third">
+            </div>
+        </div>
+    </div>
+    <button id="clear" type="button">Clear</button>
+</div>
+<div id="log">
+</div>
+</body>
+</html>
