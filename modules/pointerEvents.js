@@ -19,6 +19,10 @@
     // custom Mouse Events
     var supportsMouseEvents = !!window.MouseEvent;
 
+    if (!supportsMouseEvents) {
+        return;
+    }
+
     // The list of standardized pointer events http://www.w3.org/TR/pointerevents/
     var upperCaseEventsNames = ['PointerDown', 'PointerUp', 'PointerMove', 'PointerOver', 'PointerOut', 'PointerCancel', 'PointerEnter', 'PointerLeave'];
     var supportedEventsNames = upperCaseEventsNames.map(function(name) {
