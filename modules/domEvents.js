@@ -25,6 +25,42 @@ let removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
 
 let dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
 
+
+if (!Event.prototype.preventDefault && Object.defineProperties) {
+    Object.defineProperties(window.Event.prototype,
+        {
+            bubbles: {
+                value: true,
+                writable: true
+            },
+            cancelable: {
+                value: true,
+                writable: true
+            },
+            preventDefault: {
+                value: function () {
+                    if (this.cancelable) {
+                        this.defaultPrevented = true;
+                        this.returnValue = false;
+                    }
+                }
+            },
+            stopPropagation: {
+                value: function () {
+                    this.stoppedPropagation = true;
+                    this.cancelBubble = true;
+                }
+            },
+            stopImmediatePropagation: {
+                value: function () {
+                    this.stoppedImmediatePropagation = true;
+                    this.stopPropagation();
+                }
+            }
+        }
+    );
+}
+
 function getElements(el) {
     if (!el) {
         return [];
@@ -33,10 +69,14 @@ function getElements(el) {
     if (typeof el === 'string') {
         return nodeListToArray(document.querySelectorAll(el));
     } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) &&
-        (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) &&
-        el.length > 0 && el[0].nodeType > 0) {
+        (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length'))) {
+        if (el.length === 0 || el[0].nodeType < 1) {
+            return [];
+        }
 
         return nodeListToArray(el);
+    } else if (Array.isArray(el)) {
+        return [].concat(el);
     } else {
         return [el];
     }

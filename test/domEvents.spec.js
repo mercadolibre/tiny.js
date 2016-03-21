@@ -38,12 +38,14 @@ describe('DOMEvents', () => {
         let cb14 = chai.spy(function(e){
             e.preventDefault();
         });
+        let cb15 = chai.spy();
 
         it('should add event listener to an element', () => {
             DOMEvents.on('button', 'click', cb11);
             DOMEvents.on(button, 'click', cb12);
             DOMEvents.on('#input', 'click', cb13);
             DOMEvents.on(form, 'submit', cb14);
+            DOMEvents.on(document.querySelectorAll('.non-existent-element'), 'click', cb15);
             click(button);
             click(input);
             click(submit);
@@ -51,6 +53,7 @@ describe('DOMEvents', () => {
             expect(cb12).to.have.been.called.once;
             expect(cb13).to.have.been.called.once;
             expect(cb14).to.have.been.called.once;
+            expect(cb15).to.have.not.been.called();
         });
     });
 
