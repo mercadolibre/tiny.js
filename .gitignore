@@ -5,3 +5,4 @@ thumb.db
 
 lib/
 node_modules/
+dist/tiny-*.js
