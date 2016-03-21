@@ -1,16 +1,448 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      }
+      throw TypeError('Uncaught, unspecified "error" event.');
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        args = Array.prototype.slice.call(arguments, 1);
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    args = Array.prototype.slice.call(arguments, 1);
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      if (typeof console.trace === 'function') {
+        // not supported in IE 10
+        console.trace();
+      }
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else if (listeners) {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.prototype.listenerCount = function(type) {
+  if (this._events) {
+    var evlistener = this._events[type];
+
+    if (isFunction(evlistener))
+      return 1;
+    else if (evlistener)
+      return evlistener.length;
+  }
+  return 0;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  return emitter.listenerCount(type);
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],2:[function(require,module,exports){
+if (typeof Object.create === 'function') {
+  // implementation from standard node.js 'util' module
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    ctor.prototype = Object.create(superCtor.prototype, {
+      constructor: {
+        value: ctor,
+        enumerable: false,
+        writable: true,
+        configurable: true
+      }
+    });
+  };
+} else {
+  // old school shim for old browsers
+  module.exports = function inherits(ctor, superCtor) {
+    ctor.super_ = superCtor
+    var TempCtor = function () {}
+    TempCtor.prototype = superCtor.prototype
+    ctor.prototype = new TempCtor()
+    ctor.prototype.constructor = ctor
+  }
+}
+
+},{}],3:[function(require,module,exports){
 'use strict';
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = ajax;
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
 
-var _extend = require('./extend');
+function _interopDefault(ex) {
+    return ex && (typeof ex === 'undefined' ? 'undefined' : _typeof(ex)) === 'object' && 'default' in ex ? ex['default'] : ex;
+}
 
-var _extend2 = _interopRequireDefault(_extend);
+var inherits = _interopDefault(require('inherits'));
+var EventEmitter = _interopDefault(require('events'));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function clone(obj) {
+    if (obj === undefined || (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object') {
+        throw new Error('The "obj" parameter is required and must be an object.');
+    }
+
+    var copy = {},
+        prop = undefined;
+
+    for (prop in obj) {
+        if (obj[prop] !== undefined) {
+            copy[prop] = obj[prop];
+        }
+    }
+
+    return copy;
+}
+
+function isPlainObject(obj) {
+    // Not plain objects:
+    // - null
+    // - undefined
+    if (obj == null) {
+        return false;
+    }
+    // - Any object or value whose internal [[Class]] property is not "[object Object]"
+    // - DOM nodes
+    // - window
+    if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object' || obj.nodeType || obj === obj.window) {
+        return false;
+    }
+
+    if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, 'isPrototypeOf')) {
+        return false;
+    }
+
+    // If the function hasn't returned already, we're confident that
+    // |obj| is a plain object, created by {} or constructed with new Object
+    return true;
+}
+
+function extend() {
+    var options = undefined,
+        name = undefined,
+        src = undefined,
+        copy = undefined,
+        copyIsArray = undefined,
+        clone = undefined,
+        target = arguments[0] || {},
+        i = 1,
+        length = arguments.length,
+        deep = false;
+
+    // Handle a deep copy situation
+    if (typeof target === 'boolean') {
+        deep = target;
+
+        // Skip the boolean and the target
+        target = arguments[i] || {};
+        i++;
+    }
+
+    // Handle case when target is a string or something (possible in deep copy)
+    if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== 'object' && !(typeof target === 'undefined' ? 'undefined' : _typeof(target)) === 'function') {
+        target = {};
+    }
+
+    // Nothing to extend, return original object
+    if (length <= i) {
+        return target;
+    }
+
+    for (; i < length; i++) {
+        // Only deal with non-null/undefined values
+        if ((options = arguments[i]) != null) {
+            // Extend the base object
+            for (name in options) {
+                src = target[name];
+                copy = options[name];
+
+                // Prevent never-ending loop
+                if (target === copy) {
+                    continue;
+                }
+
+                // Recurse if we're merging plain objects or arrays
+                if (deep && copy && (isPlainObject(copy) || (copyIsArray = Array.isArray(copy)))) {
+
+                    if (copyIsArray) {
+                        copyIsArray = false;
+                        clone = src && Array.isArray(src) ? src : [];
+                    } else {
+                        clone = src && isPlainObject(src) ? src : {};
+                    }
+
+                    // Never move original objects, clone them
+                    target[name] = extend(deep, clone, copy);
+
+                    // Don't bring in undefined values
+                } else if (copy !== undefined) {
+                        target[name] = copy;
+                    }
+            }
+        }
+    }
+
+    // Return the modified object
+    return target;
+}
 
 function ajax(url, settings) {
     var args = arguments;
@@ -34,7 +466,7 @@ function ajax(url, settings) {
         complete: noop
     };
 
-    opts = (0, _extend2['default'])(defaults, settings || {});
+    opts = extend(defaults, settings || {});
 
     var mimeTypes = {
         'application/json': 'json',
@@ -133,7 +565,7 @@ function ajax(url, settings) {
     }
 
     if (opts.method === 'POST') {
-        opts.headers = (0, _extend2['default'])(opts.headers, {
+        opts.headers = extend(opts.headers, {
             'X-Requested-With': 'XMLHttpRequest',
             'Content-type': 'application/x-www-form-urlencoded'
         });
@@ -154,834 +586,126 @@ function ajax(url, settings) {
     return this;
 }
 
-},{"./extend":9}],2:[function(require,module,exports){
-'use strict';
+var noop = function noop() {};
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.addClass = addClass;
-exports.removeClass = removeClass;
-exports.hasClass = hasClass;
-var isClassList = !!document.body.classList;
+// document.head is not available in IE<9
+var head = document.getElementsByTagName('head')[0];
+
+var jsonpCount = 0;
 
 /**
- * Adds the specified class to an element
- *
- * @param el {HTMLElement}
- * @param className {String}
- *
- * @example
- * tiny.addClass(document.body, 'tiny-example');
- */
-function addClass(el, className) {
-    if (isClassList) {
-        el.classList.add(className);
-    } else {
-        el.setAttribute('class', el.getAttribute('class') + ' ' + className);
-    }
-}
-
-/**
- * Remove a single class from an element
- *
- * @param el {HTMLElement}
- * @param className {String}
- *
- * @example
- * tiny.removeClass(document.body, 'tiny-example');
- */
-function removeClass(el, className) {
-    if (isClassList) {
-        el.classList.remove(className);
-    } else {
-        el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
-    }
-}
-
-/**
- * Determine whether is the given class is assigned to an element
- * @param el {HTMLElement}
- * @param className {String}
- * @returns {Boolean}
- *
- * @example
- * tiny.hasClass(document.body, 'tiny-example');
- */
-function hasClass(el, className) {
-    var exist;
-    if (isClassList) {
-        exist = el.classList.contains(className);
-    } else {
-        exist = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
-    }
-    return exist;
-}
-
-var classList = {
-    addClass: addClass,
-    removeClass: removeClass,
-    hasClass: hasClass
-};
-
-exports['default'] = classList;
-
-},{}],3:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = clone;
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-function clone(obj) {
-    if (obj === undefined || (typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object') {
-        throw new Error('The "obj" parameter is required and must be an object.');
-    }
-
-    var copy = {},
-        prop = undefined;
-
-    for (prop in obj) {
-        if (obj[prop] !== undefined) {
-            copy[prop] = obj[prop];
-        }
-    }
-
-    return copy;
-}
-
-},{}],4:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-
-var _isPlainObject = require('./isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-var defaults = {
-    expires: '', // Empty string for session cookies
-    path: '/',
-    secure: false,
-    domain: ''
-};
-
-var day = 60 * 60 * 24;
-
-function get(key) {
-    var collection = document.cookie.split('; '),
-        value = null,
-        l = collection.length;
-
-    if (!l) {
-        return value;
-    }
-
-    for (var i = 0; i < l; i++) {
-        var parts = collection[i].split('='),
-            name = decodeURIComponent(parts.shift());
-
-        if (key === name) {
-            value = decodeURIComponent(parts.join('='));
-            break;
-        }
-    }
-
-    return value;
-}
-
-// Then `key` contains an object with keys and values for cookies, `value` contains the options object.
-function set(key, value, options) {
-    options = (typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : { expires: options };
-
-    var expires = options.expires != null ? options.expires : defaults.expires;
-
-    if (typeof expires === 'string' && expires !== '') {
-        expires = new Date(expires);
-    } else if (typeof expires === 'number') {
-        expires = new Date(+new Date() + 1000 * day * expires);
-    }
-
-    if (expires && 'toGMTString' in expires) {
-        expires = ';expires=' + expires.toGMTString();
-    }
-
-    var path = ';path=' + (options.path || defaults.path);
-
-    var domain = options.domain || defaults.domain;
-    domain = domain ? ';domain=' + domain : '';
-
-    var secure = options.secure || defaults.secure ? ';secure' : '';
-
-    if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
-        if (Array.isArray(value) || (0, _isPlainObject2['default'])(value)) {
-            value = JSON.stringify(value);
-        } else {
-            value = '';
-        }
-    }
-
-    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure;
-}
-
-function remove(key) {
-    set(key, '', -1);
-}
-
-function isEnabled() {
-    if (navigator.cookieEnabled) {
-        return true;
-    }
-
-    set('__', '_');
-    var exist = get('__') === '_';
-    remove('__');
-
-    return exist;
-}
-
-var cookies = {
-    get: get,
-    set: set,
-    remove: remove,
-    isEnabled: isEnabled
-};
-
-exports['default'] = cookies;
-
-/*
- * Escapes only characters that are not allowed in cookies
- */
-
-function encodeCookie(value) {
-    return String(value).replace(/[,;"\\=\s%]/g, function (character) {
-        return encodeURIComponent(character);
-    });
-}
-
-},{"./isPlainObject":11}],5:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = css;
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-/**
- * Get the value of a computed style for the first element in set of
- * matched elements or set one or more CSS properties for every matched element.
+ * JSONP handler
  *
  * @memberof tiny
- * @param {String|HTMLElement} elem CSS selector or an HTML Element
- * @param {String|Object} key A CSS property or a map of <property, value> when used as setter.
- * @param {Sreing} value A value to set for the property
+ * @method
+ * @param {String} url
+ * @param {Object} [opts] Optional opts.
+ * @param {String} [opts.prefix] Callback prefix. Default: `__jsonp`
+ * @param {String} [opts.param] QS parameter. Default: `callback`
+ * @param {String|Function} [opts.name] The name of the callback function that
+ *   receives the result. Default: `opts.prefix${increment}`
+ * @param {Number} [opts.timeout] How long after the request until a timeout
+ *   error will occur. Default: 15000
  *
- * @returns {String|Void}
- */
-function css(elem, key, value) {
-    var args = arguments,
-        elements = getElements(elem),
-        length = elements.length,
-        setter;
-
-    // Get attribute
-    if (typeof key === 'string' && args.length === 2) {
-        return length === 0 ? '' : getElStyle(elements[0], key);
-    }
-
-    // Set attributes
-    if (args.length === 3) {
-        setter = function (el) {
-            el.style[key] = value;
-        };
-    } else if ((typeof key === 'undefined' ? 'undefined' : _typeof(key)) === 'object') {
-        setter = function (el) {
-            Object.keys(key).forEach(function (name) {
-                el.style[name] = key[name];
-            });
-        };
-    }
-
-    for (var i = 0; i < length; i++) {
-        setter(elements[i]);
-    }
-}
-
-function getElStyle(el, prop) {
-    if (window.getComputedStyle) {
-        return window.getComputedStyle(el, null).getPropertyValue(prop);
-        // IE
-    } else {
-            // Turn style name into camel notation
-            prop = prop.replace(/\-(\w)/g, function (str, $1) {
-                return $1.toUpperCase();
-            });
-            return el.currentStyle[prop];
-        }
-}
-
-function getElements(el) {
-    if (!el) {
-        return [];
-    }
-
-    if (typeof el === 'string') {
-        return nodeListToArray(document.querySelectorAll(el));
-    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) && el.length > 0 && el[0].nodeType > 0) {
-
-        return nodeListToArray(el);
-    } else {
-        return [el];
-    }
-}
-
-function nodeListToArray(elements) {
-    var i = 0,
-        length = elements.length,
-        arr = [];
-
-    for (; i < length; i++) {
-        arr.push(elements[i]);
-    }
-
-    return arr;
-}
-
-},{}],6:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports.initEvent = initEvent;
-exports.on = on;
-exports.once = once;
-exports.off = off;
-exports.trigger = trigger;
-
-var _extend = require('./extend');
-
-var _extend2 = _interopRequireDefault(_extend);
-
-var _isPlainObject = require('./isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var DOM_EVENTS = (function () {
-    var events = [];
-    for (var attr in document) {
-        if (attr.substring(0, 2) === 'on') {
-            var evt = attr.replace('on', '');
-            events.push(evt);
-        }
-    }
-    return events;
-})();
-
-var MOUSE_EVENTS = DOM_EVENTS.filter(function (name) {
-    return (/^(?:click|dblclick|mouse(?:down|up|over|move|out))$/.test(name)
-    );
-});
-
-var isStandard = document.addEventListener ? true : false;
-
-var addHandler = isStandard ? 'addEventListener' : 'attachEvent';
-
-var removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
-
-var dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
-
-function getElements(el) {
-    if (!el) {
-        return [];
-    }
-
-    if (typeof el === 'string') {
-        return nodeListToArray(document.querySelectorAll(el));
-    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) && el.length > 0 && el[0].nodeType > 0) {
-
-        return nodeListToArray(el);
-    } else {
-        return [el];
-    }
-}
-
-function nodeListToArray(elements) {
-    var i = 0,
-        length = elements.length,
-        arr = [];
-
-    for (; i < length; i++) {
-        arr.push(elements[i]);
-    }
-
-    return arr;
-}
-
-function initEvent(name, props) {
-    if (typeof name !== 'string') {
-        props = name;
-        name = props.type;
-    }
-    var event = undefined,
-        isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
-        isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
-
-    var data = (0, _extend2['default'])({
-        bubbles: isDomEvent,
-        cancelable: isDomEvent,
-        detail: undefined
-    }, props);
-
-    if (document.createEvent) {
-        event = document.createEvent(isMouseEvent && window.MouseEvent ? 'MouseEvents' : 'Events');
-        event.initEvent(name, data.bubbles, data.cancelable, data.detail);
-    } else if (document.createEventObject) {
-        event = document.createEventObject(window.event);
-        if (isMouseEvent) {
-            event.button = 1;
-        }
-        if (!data.bubbles) {
-            event.cancelBubble = true;
-        }
-    }
-
-    return event;
-}
-
-function normalizeEventName(event) {
-    if (event.substr(0, 2) === 'on') {
-        return isStandard ? event.substr(2) : event;
-    } else {
-        return isStandard ? event : 'on' + event;
-    }
-}
-
-/**
- * Crossbrowser implementation of {HTMLElement}.addEventListener.
- *
- * @memberof tiny
- * @type {Function}
- * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
- * @param {String} event Event name
- * @param {Function} handler Event handler function
- * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
+ * @returns {Function} Returns a cancel function
  *
  * @example
- * tiny.on(document, 'click', function(e){}, false);
- *
- * tiny.on('p > button', 'click', function(e){}, false);
+ * var cancel = tiny.jsonp('http://suggestgz.mlapps.com/sites/MLA/autosuggest?q=smartphone&v=1', {timeout: 5000});
+ * if (something) {
+ *   cancel();
+ * }
  */
-function on(elem, event, handler, bubbles) {
-    getElements(elem).forEach(function (el) {
-        el[addHandler](normalizeEventName(event), handler, bubbles || false);
-    });
-}
+function jsonp(url, settings) {
+    var id = undefined,
+        script = undefined,
+        timer = undefined,
+        cleanup = undefined,
+        cancel = undefined;
 
-/**
- * Attach a handler to an event for the {HTMLElement} that executes only
- * once.
- *
- * @memberof ch.Event
- * @type {Function}
- * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
- * @param {String} event Event name
- * @param {Function} handler Event handler function
- * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
- *
- * @example
- * tiny.once(document, 'click', function(e){}, false);
- */
-function once(elem, event, handler, bubbles) {
-    getElements(elem).forEach(function (el) {
-        var origHandler = handler;
+    var opts = extend({
+        prefix: '__jsonp',
+        param: 'callback',
+        timeout: 15000,
+        success: noop,
+        error: noop
+    }, settings);
 
-        handler = function (e) {
-            off(el, e.type, handler);
+    // Generate an unique id for the request.
+    jsonpCount++;
+    id = opts.name ? typeof opts.name === 'function' ? opts.name(opts.prefix, jsonpCount) : opts.name : opts.prefix + jsonpCount++;
 
-            return origHandler.apply(el, arguments);
-        };
-
-        el[addHandler](normalizeEventName(event), handler, bubbles || false);
-    });
-}
-
-/**
- * Crossbrowser implementation of {HTMLElement}.removeEventListener.
- *
- * @memberof ch.Event
- * @type {Function}
- * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to remove listener from
- * @param {String} event Event name
- * @param {Function} handler Event handler function to remove
- *
- * @example
- * tiny.off(document, 'click', fn);
- */
-function off(elem, event, handler) {
-    getElements(elem).forEach(function (el) {
-        el[removeHandler](normalizeEventName(event), handler);
-    });
-}
-
-/**
- * Crossbrowser implementation of {HTMLElement}.removeEventListener.
- *
- * @memberof tiny
- * @type {Function}
- * @param {HTMLElement} elem An HTMLElement or a CSS selector to dispatch event to
- * @param {String|Event} event Event name or an event object
- *
- * @example
- * tiny.trigger('.btn', 'click');
- */
-function trigger(elem, event, props) {
-    var _this = this;
-
-    var name = typeof event === 'string' ? event : event.type;
-    event = typeof event === 'string' || (0, _isPlainObject2['default'])(event) ? initEvent(event, props) : event;
-
-    getElements(elem).forEach(function (el) {
-        // handle focus(), blur() by calling them directly
-        if (event.type in focus && typeof _this[event.type] == 'function') {
-            _this[event.type]();
-        } else {
-            isStandard ? el[dispatch](event) : el[dispatch](normalizeEventName(name), event);
+    cleanup = function cleanup() {
+        // Remove the script tag.
+        if (script && script.parentNode) {
+            script.parentNode.removeChild(script);
         }
-    });
-}
 
-var DOMEvents = {
-    on: on,
-    once: once,
-    off: off,
-    trigger: trigger
-};
+        // Don't delete the jsonp handler from window to not generate an error
+        // when script will be loaded after cleaning
+        window[id] = noop;
 
-exports['default'] = DOMEvents;
-
-},{"./extend":9,"./isPlainObject":11}],7:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _events = require('events');
-
-var _events2 = _interopRequireDefault(_events);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-/**
- * Inherits the prototype methods from one constructor into another.
- * The parent will be accessible through the obj.super_ property. Fully
- * compatible with standard node.js inherits.
- *
- * @memberof tiny
- * @param {Function} obj An object that will have the new members.
- * @param {Function} superConstructor The constructor Class.
- * @returns {Object}
- * @exampleDescription
- *
- * @example
- * tiny.inherits(obj, parent);
- */
-exports['default'] = _events2['default'];
-
-},{"events":20}],8:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.onkeyinput = exports.onpointerleave = exports.onpointerenter = exports.onpointertap = exports.onpointermove = exports.onpointerup = exports.onpointerdown = exports.onscroll = exports.onresize = exports.onlayoutchange = undefined;
-
-var _support = require('./support');
-
-var _support2 = _interopRequireDefault(_support);
-
-require('./pointerEvents');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var supportsMouseEvents = !!window.MouseEvent;
-
-/**
- * Every time Chico UI needs to inform all visual components that layout has
- * been changed, it emits this event.
- *
- * @constant
- * @type {String}
- */
-var onlayoutchange = exports.onlayoutchange = 'layoutchange';
-
-/**
- * Equivalent to 'resize'.
- * @constant
- * @type {String}
- */
-var onresize = exports.onresize = 'resize';
-
-/**
- * Equivalent to 'scroll'.
- * @constant
- * @type {String}
- */
-var onscroll = exports.onscroll = 'scroll';
-
-/**
- * Equivalent to 'pointerdown' or 'mousedown', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#dfn-pointerdown | Pointer Events W3C Recommendation
- */
-var onpointerdown = exports.onpointerdown = supportsMouseEvents ? 'pointerdown' : 'mousedown';
-
-/**
- * Equivalent to 'pointerup' or 'mouseup', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#dfn-pointerup | Pointer Events W3C Recommendation
- */
-var onpointerup = exports.onpointerup = supportsMouseEvents ? 'pointerup' : 'mouseup';
-
-/**
- * Equivalent to 'pointermove' or 'mousemove', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#dfn-pointermove | Pointer Events W3C Recommendation
- */
-var onpointermove = exports.onpointermove = supportsMouseEvents ? 'pointermove' : 'mousemove';
-
-/**
- * Equivalent to 'pointertap' or 'click', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | Pointer Events W3C Recommendation
- */
-var onpointertap = exports.onpointertap = _support2['default'].touch && supportsMouseEvents ? 'pointertap' : 'click';
-
-/**
- * Equivalent to 'pointerenter' or 'mouseenter', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#dfn-pointerenter | Pointer Events W3C Recommendation
- */
-var onpointerenter = exports.onpointerenter = supportsMouseEvents ? 'pointerenter' : 'mouseenter';
-
-/**
- * Equivalent to 'pointerleave' or 'mouseleave', depending on browser capabilities.
- *
- * @constant
- * @type {String}
- * @link http://www.w3.org/TR/pointerevents/#dfn-pointerleave | Pointer Events W3C Recommendation
- */
-var onpointerleave = exports.onpointerleave = supportsMouseEvents ? 'pointerleave' : 'mouseleave';
-
-/**
- * The DOM input event that is fired when the value of an <input> or <textarea>
- * element is changed. Equivalent to 'input' or 'keydown', depending on browser
- * capabilities.
- *
- * @constant
- * @type {String}
- */
-var onkeyinput = exports.onkeyinput = 'oninput' in document.createElement('input') ? 'input' : 'keydown';
-
-},{"./pointerEvents":17,"./support":19}],9:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = extend;
-
-var _isPlainObject = require('./isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-function extend() {
-    var options = undefined,
-        name = undefined,
-        src = undefined,
-        copy = undefined,
-        copyIsArray = undefined,
-        clone = undefined,
-        target = arguments[0] || {},
-        i = 1,
-        length = arguments.length,
-        deep = false;
-
-    // Handle a deep copy situation
-    if (typeof target === 'boolean') {
-        deep = target;
-
-        // Skip the boolean and the target
-        target = arguments[i] || {};
-        i++;
-    }
-
-    // Handle case when target is a string or something (possible in deep copy)
-    if ((typeof target === 'undefined' ? 'undefined' : _typeof(target)) !== 'object' && !(typeof target === 'undefined' ? 'undefined' : _typeof(target)) === 'function') {
-        target = {};
-    }
-
-    // Nothing to extend, return original object
-    if (length <= i) {
-        return target;
-    }
-
-    for (; i < length; i++) {
-        // Only deal with non-null/undefined values
-        if ((options = arguments[i]) != null) {
-            // Extend the base object
-            for (name in options) {
-                src = target[name];
-                copy = options[name];
-
-                // Prevent never-ending loop
-                if (target === copy) {
-                    continue;
-                }
-
-                // Recurse if we're merging plain objects or arrays
-                if (deep && copy && ((0, _isPlainObject2['default'])(copy) || (copyIsArray = Array.isArray(copy)))) {
-
-                    if (copyIsArray) {
-                        copyIsArray = false;
-                        clone = src && Array.isArray(src) ? src : [];
-                    } else {
-                        clone = src && (0, _isPlainObject2['default'])(src) ? src : {};
-                    }
-
-                    // Never move original objects, clone them
-                    target[name] = extend(deep, clone, copy);
-
-                    // Don't bring in undefined values
-                } else if (copy !== undefined) {
-                        target[name] = copy;
-                    }
-            }
+        if (timer) {
+            clearTimeout(timer);
         }
+    };
+
+    if (opts.timeout) {
+        timer = setTimeout(function () {
+            cleanup();
+            opts.error(new Error('Script loading timeout'));
+        }, opts.timeout);
     }
 
-    // Return the modified object
-    return target;
+    window[id] = function (data) {
+        cleanup();
+        opts.success(data);
+    };
+
+    // Add querystring component
+    url += (~url.indexOf('?') ? '&' : '?') + opts.param + '=' + encodeURIComponent(id);
+    url = url.replace('?&', '?');
+
+    // Create script element
+    script = document.createElement('script');
+    script.type = 'text/javascript';
+    script.src = url;
+    script.onerror = function (e) {
+        cleanup();
+        opts.error(new Error(e.message || 'Script Error'));
+    };
+    head.appendChild(script);
+
+    cancel = function cancel() {
+        if (window[id]) {
+            cleanup();
+        }
+    };
+
+    return cancel;
 }
 
-},{"./isPlainObject":11}],10:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _inherits = require('inherits');
-
-var _inherits2 = _interopRequireDefault(_inherits);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-/**
- * Inherits the prototype methods from one constructor into another.
- * The parent will be accessible through the obj.super_ property. Fully
- * compatible with standard node.js inherits.
- *
- * @memberof tiny
- * @param {Function} obj An object that will have the new members.
- * @param {Function} superConstructor The constructor Class.
- * @returns {Object}
- * @exampleDescription
- *
- * @example
- * tiny.inherits(obj, parent);
- */
-exports['default'] = _inherits2['default'];
-
-},{"inherits":21}],11:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = isPlainObject;
-
-function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; }
-
-function isPlainObject(obj) {
-    // Not plain objects:
-    // - null
-    // - undefined
-    if (obj == null) {
-        return false;
-    }
-    // - Any object or value whose internal [[Class]] property is not "[object Object]"
-    // - DOM nodes
-    // - window
-    if ((typeof obj === 'undefined' ? 'undefined' : _typeof(obj)) !== 'object' || obj.nodeType || obj === obj.window) {
-        return false;
-    }
-
-    if (obj.constructor && !Object.prototype.hasOwnProperty.call(obj.constructor.prototype, 'isPrototypeOf')) {
-        return false;
-    }
-
-    // If the function hasn't returned already, we're confident that
-    // |obj| is a plain object, created by {} or constructed with new Object
-    return true;
-}
-
-},{}],12:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
 // Based on the https://github.com/pablomoretti/jcors-loader written by Pablo Moretti
 
 /* private */
 
-var document = window.document,
-    node_createElementScript = document.createElement('script'),
-    node_elementScript = document.getElementsByTagName('script')[0],
-    buffer = [],
-    lastBufferIndex = 0,
-    createCORSRequest = (function () {
+var document$1 = window.document;
+var node_createElementScript = document$1.createElement('script');
+var node_elementScript = document$1.getElementsByTagName('script')[0];
+var buffer = [];
+var lastBufferIndex = 0;
+var createCORSRequest = function () {
     var xhr = undefined,
         CORSRequest = undefined;
     if (window.XMLHttpRequest) {
         xhr = new window.XMLHttpRequest();
         if ('withCredentials' in xhr) {
-            CORSRequest = function (url) {
+            CORSRequest = function CORSRequest(url) {
                 xhr = new window.XMLHttpRequest();
                 xhr.open('get', url, true);
                 return xhr;
             };
         } else if (window.XDomainRequest) {
-            CORSRequest = function (url) {
+            CORSRequest = function CORSRequest(url) {
                 xhr = new window.XDomainRequest();
                 xhr.open('get', url);
                 return xhr;
@@ -990,8 +714,7 @@ var document = window.document,
     }
 
     return CORSRequest;
-})();
-
+}();
 function execute(script) {
     if (typeof script === 'string') {
         var g = node_createElementScript.cloneNode(false);
@@ -1091,229 +814,179 @@ function loadWithoutCORS() {
 
 var jcors = createCORSRequest ? loadWithCORS : loadWithoutCORS;
 
-exports['default'] = jcors;
+var support = {
+    /**
+     * Verify that CSS Transitions are supported (or any of its browser-specific implementations).
+     *
+     * @static
+     * @type {Boolean|Object}
+     * @example
+     * if (tiny.support.transition) {
+         *     // Some code here!
+         * }
+     */
+    transition: transitionEnd(),
 
-},{}],13:[function(require,module,exports){
-'use strict';
+    /**
+     * Verify that CSS Animations are supported (or any of its browser-specific implementations).
+     *
+     * @static
+     * @type {Boolean|Object}
+     * @example
+     * if (tiny.support.animation) {
+         *     // Some code here!
+         * }
+     */
+    animation: animationEnd(),
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = jsonp;
+    /**
+     * Checks is the User Agent supports touch events.
+     * @type {Boolean}
+     * @example
+     * if (tiny.support.touch) {
+         *     // Some code here!
+         * }
+     */
+    touch: 'ontouchend' in document,
 
-var _extend = require('./extend');
-
-var _extend2 = _interopRequireDefault(_extend);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var noop = function noop() {};
-
-// document.head is not available in IE<9
-var head = document.getElementsByTagName('head')[0];
-
-var jsonpCount = 0;
-
-/**
- * JSONP handler
- *
- * @memberof tiny
- * @method
- * @param {String} url
- * @param {Object} [opts] Optional opts.
- * @param {String} [opts.prefix] Callback prefix. Default: `__jsonp`
- * @param {String} [opts.param] QS parameter. Default: `callback`
- * @param {String|Function} [opts.name] The name of the callback function that
- *   receives the result. Default: `opts.prefix${increment}`
- * @param {Number} [opts.timeout] How long after the request until a timeout
- *   error will occur. Default: 15000
- *
- * @returns {Function} Returns a cancel function
- *
- * @example
- * var cancel = tiny.jsonp('http://suggestgz.mlapps.com/sites/MLA/autosuggest?q=smartphone&v=1', {timeout: 5000});
- * if (something) {
- *   cancel();
- * }
- */
-function jsonp(url, settings) {
-    var id = undefined,
-        script = undefined,
-        timer = undefined,
-        cleanup = undefined,
-        cancel = undefined;
-
-    var opts = (0, _extend2['default'])({
-        prefix: '__jsonp',
-        param: 'callback',
-        timeout: 15000,
-        success: noop,
-        error: noop
-    }, settings);
-
-    // Generate an unique id for the request.
-    jsonpCount++;
-    id = opts.name ? typeof opts.name === 'function' ? opts.name(opts.prefix, jsonpCount) : opts.name : opts.prefix + jsonpCount++;
-
-    cleanup = function () {
-        // Remove the script tag.
-        if (script && script.parentNode) {
-            script.parentNode.removeChild(script);
+    /**
+     * Checks is the User Agent supports custom events.
+     * @type {Boolean}
+     * @example
+     * if (tiny.support.customEvent) {
+         *     // Some code here!
+         * }
+     */
+    customEvent: function () {
+        // TODO: find better solution for CustomEvent check
+        try {
+            // IE8 has no support for CustomEvent, in IE gte 9 it cannot be
+            // instantiated but exist
+            new CustomEvent(name, {
+                detail: {}
+            });
+            return true;
+        } catch (e) {
+            return false;
         }
-
-        // Don't delete the jsonp handler from window to not generate an error
-        // when script will be loaded after cleaning
-        window[id] = noop;
-
-        if (timer) {
-            clearTimeout(timer);
-        }
-    };
-
-    if (opts.timeout) {
-        timer = setTimeout(function () {
-            cleanup();
-            opts.error(new Error('Script loading timeout'));
-        }, opts.timeout);
-    }
-
-    window[id] = function (data) {
-        cleanup();
-        opts.success(data);
-    };
-
-    // Add querystring component
-    url += (~url.indexOf('?') ? '&' : '?') + opts.param + '=' + encodeURIComponent(id);
-    url = url.replace('?&', '?');
-
-    // Create script element
-    script = document.createElement('script');
-    script.type = 'text/javascript';
-    script.src = url;
-    script.onerror = function (e) {
-        cleanup();
-        opts.error(new Error(e.message || 'Script Error'));
-    };
-    head.appendChild(script);
-
-    cancel = function () {
-        if (window[id]) {
-            cleanup();
-        }
-    };
-
-    return cancel;
-}
-
-},{"./extend":9}],14:[function(require,module,exports){
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports["default"] = next;
-/**
- * IE8 safe method to get the next element sibling
- *
- * @memberof tiny
- * @param {HTMLElement} el A given HTMLElement.
- * @returns {HTMLElement}
- *
- * @example
- * tiny.next(el);
- */
-function next(element) {
-    function next(el) {
-        do {
-            el = el.nextSibling;
-        } while (el && el.nodeType !== 1);
-
-        return el;
-    }
-
-    return element.nextElementSibling || next(element);
-}
-
-},{}],15:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = offset;
-
-var _css = require('./css');
-
-var _css2 = _interopRequireDefault(_css);
-
-var _scroll = require('./scroll');
-
-var _scroll2 = _interopRequireDefault(_scroll);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+    }()
+};
 
 /**
- * Get the current offset of an element.
+ * Checks for the CSS Transitions support (http://www.modernizr.com/)
  *
- * @param {HTMLElement} el A given HTMLElement.
- * @returns {{left: Number, top: Number}}
- *
- * @example
- * tiny.offset(el);
- */
-function offset(el) {
-    var rect = el.getBoundingClientRect(),
-        fixedParent = getFixedParent(el),
-        currentScroll = (0, _scroll2['default'])(),
-        offset = {
-        'left': rect.left,
-        'top': rect.top
-    };
-
-    if ((0, _css2['default'])(el, 'position') !== 'fixed' && fixedParent === null) {
-        offset.left += currentScroll.left;
-        offset.top += currentScroll.top;
-    }
-
-    return offset;
-}
-
-/**
- * Get the current parentNode with the 'fixed' position.
- *
+ * @function
  * @private
- * @param {HTMLElement} el A given HTMLElement.
- *
- * @returns {HTMLElement}
  */
-function getFixedParent(el) {
-    var currentParent = el.offsetParent,
-        parent = undefined;
+function transitionEnd() {
+    var el = document.createElement('tiny');
 
-    while (parent === undefined) {
+    var transEndEventNames = {
+        WebkitTransition: 'webkitTransitionEnd',
+        MozTransition: 'transitionend',
+        OTransition: 'oTransitionEnd otransitionend',
+        transition: 'transitionend'
+    };
 
-        if (currentParent === null) {
-            parent = null;
-            break;
-        }
-
-        if ((0, _css2['default'])(currentParent, 'position') !== 'fixed') {
-            currentParent = currentParent.offsetParent;
-        } else {
-            parent = currentParent;
+    for (var _name in transEndEventNames) {
+        if (transEndEventNames.hasOwnProperty(_name) && el.style[_name] !== undefined) {
+            return {
+                end: transEndEventNames[_name]
+            };
         }
     }
 
-    return parent;
+    return false;
 }
 
-},{"./css":5,"./scroll":18}],16:[function(require,module,exports){
-"use strict";
+/**
+ * Checks for the CSS Animations support
+ *
+ * @function
+ * @private
+ */
+function animationEnd() {
+    var el = document.createElement('tiny');
 
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports["default"] = parent;
+    var animEndEventNames = {
+        WebkitAnimation: 'webkitAnimationEnd',
+        MozAnimation: 'animationend',
+        OAnimation: 'oAnimationEnd oanimationend',
+        animation: 'animationend'
+    };
+
+    for (var _name2 in animEndEventNames) {
+        if (animEndEventNames.hasOwnProperty(_name2) && el.style[_name2] !== undefined) {
+            return {
+                end: animEndEventNames[_name2]
+            };
+        }
+    }
+
+    return false;
+}
+
+var isClassList = !!document.body.classList;
+
+/**
+ * Adds the specified class to an element
+ *
+ * @param el {HTMLElement}
+ * @param className {String}
+ *
+ * @example
+ * tiny.addClass(document.body, 'tiny-example');
+ */
+function addClass(el, className) {
+    if (isClassList) {
+        el.classList.add(className);
+    } else {
+        el.setAttribute('class', el.getAttribute('class') + ' ' + className);
+    }
+}
+
+/**
+ * Remove a single class from an element
+ *
+ * @param el {HTMLElement}
+ * @param className {String}
+ *
+ * @example
+ * tiny.removeClass(document.body, 'tiny-example');
+ */
+function removeClass(el, className) {
+    if (isClassList) {
+        el.classList.remove(className);
+    } else {
+        el.setAttribute('class', el.className.replace(new RegExp('(^|\\b)' + className.split(' ').join('|') + '(\\b|$)', 'gi'), ' '));
+    }
+}
+
+/**
+ * Determine whether is the given class is assigned to an element
+ * @param el {HTMLElement}
+ * @param className {String}
+ * @returns {Boolean}
+ *
+ * @example
+ * tiny.hasClass(document.body, 'tiny-example');
+ */
+function hasClass(el, className) {
+    var exist;
+    if (isClassList) {
+        exist = el.classList.contains(className);
+    } else {
+        exist = new RegExp('(^| )' + className + '( |$)', 'gi').test(el.className);
+    }
+    return exist;
+}
+
+var classList = {
+    addClass: addClass,
+    removeClass: removeClass,
+    hasClass: hasClass
+};
+
 /**
  * Get the parent of an element, optionally filtered by a tag
  *
@@ -1345,8 +1018,504 @@ function parent(el, tagname) {
     }
 }
 
-},{}],17:[function(require,module,exports){
-'use strict';
+/**
+ * IE8 safe method to get the next element sibling
+ *
+ * @memberof tiny
+ * @param {HTMLElement} el A given HTMLElement.
+ * @returns {HTMLElement}
+ *
+ * @example
+ * tiny.next(el);
+ */
+function next(element) {
+    function next(el) {
+        do {
+            el = el.nextSibling;
+        } while (el && el.nodeType !== 1);
+
+        return el;
+    }
+
+    return element.nextElementSibling || next(element);
+}
+
+/**
+ * Get the value of a computed style for the first element in set of
+ * matched elements or set one or more CSS properties for every matched element.
+ *
+ * @memberof tiny
+ * @param {String|HTMLElement} elem CSS selector or an HTML Element
+ * @param {String|Object} key A CSS property or a map of <property, value> when used as setter.
+ * @param {Sreing} value A value to set for the property
+ *
+ * @returns {String|Void}
+ */
+function css(elem, key, value) {
+    var args = arguments,
+        elements = getElements(elem),
+        length = elements.length,
+        setter;
+
+    // Get attribute
+    if (typeof key === 'string' && args.length === 2) {
+        return length === 0 ? '' : getElStyle(elements[0], key);
+    }
+
+    // Set attributes
+    if (args.length === 3) {
+        setter = function setter(el) {
+            el.style[key] = value;
+        };
+    } else if ((typeof key === 'undefined' ? 'undefined' : _typeof(key)) === 'object') {
+        setter = function setter(el) {
+            Object.keys(key).forEach(function (name) {
+                el.style[name] = key[name];
+            });
+        };
+    }
+
+    for (var i = 0; i < length; i++) {
+        setter(elements[i]);
+    }
+}
+
+function getElStyle(el, prop) {
+    if (window.getComputedStyle) {
+        return window.getComputedStyle(el, null).getPropertyValue(prop);
+        // IE
+    } else {
+            // Turn style name into camel notation
+            prop = prop.replace(/\-(\w)/g, function (str, $1) {
+                return $1.toUpperCase();
+            });
+            return el.currentStyle[prop];
+        }
+}
+
+function getElements(el) {
+    if (!el) {
+        return [];
+    }
+
+    if (typeof el === 'string') {
+        return nodeListToArray(document.querySelectorAll(el));
+    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length')) && el.length > 0 && el[0].nodeType > 0) {
+
+        return nodeListToArray(el);
+    } else {
+        return [el];
+    }
+}
+
+function nodeListToArray(elements) {
+    var i = 0,
+        length = elements.length,
+        arr = [];
+
+    for (; i < length; i++) {
+        arr.push(elements[i]);
+    }
+
+    return arr;
+}
+
+/**
+ * Get the current vertical and horizontal positions of the scroll bars.
+ *
+ * @memberof tiny
+ * @returns {{left: (Number), top: (Number)}}
+ *
+ * @example
+ * tiny.scroll().top;
+ */
+function scroll() {
+    return {
+        'left': window.pageXOffset || document.documentElement.scrollLeft || 0,
+        'top': window.pageYOffset || document.documentElement.scrollTop || 0
+    };
+}
+
+/**
+ * Get the current offset of an element.
+ *
+ * @param {HTMLElement} el A given HTMLElement.
+ * @returns {{left: Number, top: Number}}
+ *
+ * @example
+ * tiny.offset(el);
+ */
+function offset(el) {
+    var rect = el.getBoundingClientRect(),
+        fixedParent = getFixedParent(el),
+        currentScroll = scroll(),
+        offset = {
+        'left': rect.left,
+        'top': rect.top
+    };
+
+    if (css(el, 'position') !== 'fixed' && fixedParent === null) {
+        offset.left += currentScroll.left;
+        offset.top += currentScroll.top;
+    }
+
+    return offset;
+}
+
+/**
+ * Get the current parentNode with the 'fixed' position.
+ *
+ * @private
+ * @param {HTMLElement} el A given HTMLElement.
+ *
+ * @returns {HTMLElement}
+ */
+function getFixedParent(el) {
+    var currentParent = el.offsetParent,
+        parent = undefined;
+
+    while (parent === undefined) {
+
+        if (currentParent === null) {
+            parent = null;
+            break;
+        }
+
+        if (css(currentParent, 'position') !== 'fixed') {
+            currentParent = currentParent.offsetParent;
+        } else {
+            parent = currentParent;
+        }
+    }
+
+    return parent;
+}
+
+var defaults = {
+    expires: '', // Empty string for session cookies
+    path: '/',
+    secure: false,
+    domain: ''
+};
+
+var day = 60 * 60 * 24;
+
+function get(key) {
+    var collection = document.cookie.split('; '),
+        value = null,
+        l = collection.length;
+
+    if (!l) {
+        return value;
+    }
+
+    for (var i = 0; i < l; i++) {
+        var parts = collection[i].split('='),
+            _name3 = decodeURIComponent(parts.shift());
+
+        if (key === _name3) {
+            value = decodeURIComponent(parts.join('='));
+            break;
+        }
+    }
+
+    return value;
+}
+
+// Then `key` contains an object with keys and values for cookies, `value` contains the options object.
+function set(key, value, options) {
+    options = (typeof options === 'undefined' ? 'undefined' : _typeof(options)) === 'object' ? options : { expires: options };
+
+    var expires = options.expires != null ? options.expires : defaults.expires;
+
+    if (typeof expires === 'string' && expires !== '') {
+        expires = new Date(expires);
+    } else if (typeof expires === 'number') {
+        expires = new Date(+new Date() + 1000 * day * expires);
+    }
+
+    if (expires && 'toGMTString' in expires) {
+        expires = ';expires=' + expires.toGMTString();
+    }
+
+    var path = ';path=' + (options.path || defaults.path);
+
+    var domain = options.domain || defaults.domain;
+    domain = domain ? ';domain=' + domain : '';
+
+    var secure = options.secure || defaults.secure ? ';secure' : '';
+
+    if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
+        if (Array.isArray(value) || isPlainObject(value)) {
+            value = JSON.stringify(value);
+        } else {
+            value = '';
+        }
+    }
+
+    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure;
+}
+
+function remove(key) {
+    set(key, '', -1);
+}
+
+function isEnabled() {
+    if (navigator.cookieEnabled) {
+        return true;
+    }
+
+    set('__', '_');
+    var exist = get('__') === '_';
+    remove('__');
+
+    return exist;
+}
+
+var cookies = {
+    get: get,
+    set: set,
+    remove: remove,
+    isEnabled: isEnabled
+};
+
+/*
+ * Escapes only characters that are not allowed in cookies
+ */
+function encodeCookie(value) {
+    return String(value).replace(/[,;"\\=\s%]/g, function (character) {
+        return encodeURIComponent(character);
+    });
+}
+
+var DOM_EVENTS = function () {
+    var events = [];
+    for (var attr in document) {
+        if (attr.substring(0, 2) === 'on') {
+            var evt = attr.replace('on', '');
+            events.push(evt);
+        }
+    }
+    return events;
+}();
+
+var MOUSE_EVENTS = DOM_EVENTS.filter(function (name) {
+    return (/^(?:click|dblclick|mouse(?:down|up|over|move|out))$/.test(name)
+    );
+});
+
+var isStandard = document.addEventListener ? true : false;
+
+var addHandler = isStandard ? 'addEventListener' : 'attachEvent';
+
+var removeHandler = isStandard ? 'removeEventListener' : 'detachEvent';
+
+var dispatch = isStandard ? 'dispatchEvent' : 'fireEvent';
+
+if (!Event.prototype.preventDefault && Object.defineProperties) {
+    Object.defineProperties(window.Event.prototype, {
+        bubbles: {
+            value: true,
+            writable: true
+        },
+        cancelable: {
+            value: true,
+            writable: true
+        },
+        preventDefault: {
+            value: function value() {
+                if (this.cancelable) {
+                    this.defaultPrevented = true;
+                    this.returnValue = false;
+                }
+            }
+        },
+        stopPropagation: {
+            value: function value() {
+                this.stoppedPropagation = true;
+                this.cancelBubble = true;
+            }
+        },
+        stopImmediatePropagation: {
+            value: function value() {
+                this.stoppedImmediatePropagation = true;
+                this.stopPropagation();
+            }
+        }
+    });
+}
+
+function getElements$1(el) {
+    if (!el) {
+        return [];
+    }
+
+    if (typeof el === 'string') {
+        return nodeListToArray$1(document.querySelectorAll(el));
+    } else if (/^\[object (HTMLCollection|NodeList|Object)\]$/.test(Object.prototype.toString.call(el)) && (typeof el.length === 'number' || Object.prototype.hasOwnProperty.call(el, 'length'))) {
+        if (el.length === 0 || el[0].nodeType < 1) {
+            return [];
+        }
+
+        return nodeListToArray$1(el);
+    } else if (Array.isArray(el)) {
+        return [].concat(el);
+    } else {
+        return [el];
+    }
+}
+
+function nodeListToArray$1(elements) {
+    var i = 0,
+        length = elements.length,
+        arr = [];
+
+    for (; i < length; i++) {
+        arr.push(elements[i]);
+    }
+
+    return arr;
+}
+
+function initEvent(name, props) {
+    if (typeof name !== 'string') {
+        props = name;
+        name = props.type;
+    }
+    var event = undefined,
+        isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
+        isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
+
+    var data = extend({
+        bubbles: isDomEvent,
+        cancelable: isDomEvent,
+        detail: undefined
+    }, props);
+
+    if (document.createEvent) {
+        event = document.createEvent(isMouseEvent && window.MouseEvent ? 'MouseEvents' : 'Events');
+        event.initEvent(name, data.bubbles, data.cancelable, data.detail);
+    } else if (document.createEventObject) {
+        event = document.createEventObject(window.event);
+        if (isMouseEvent) {
+            event.button = 1;
+        }
+        if (!data.bubbles) {
+            event.cancelBubble = true;
+        }
+    }
+
+    return event;
+}
+
+function normalizeEventName(event) {
+    if (event.substr(0, 2) === 'on') {
+        return isStandard ? event.substr(2) : event;
+    } else {
+        return isStandard ? event : 'on' + event;
+    }
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.addEventListener.
+ *
+ * @memberof tiny
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function
+ * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
+ *
+ * @example
+ * tiny.on(document, 'click', function(e){}, false);
+ *
+ * tiny.on('p > button', 'click', function(e){}, false);
+ */
+function on(elem, event, handler, bubbles) {
+    getElements$1(elem).forEach(function (el) {
+        el[addHandler](normalizeEventName(event), handler, bubbles || false);
+    });
+}
+
+/**
+ * Attach a handler to an event for the {HTMLElement} that executes only
+ * once.
+ *
+ * @memberof ch.Event
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to add listener to
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function
+ * @param {Boolean} bubbles Whether or not to be propagated to outer elements.
+ *
+ * @example
+ * tiny.once(document, 'click', function(e){}, false);
+ */
+function once(elem, event, _handler, bubbles) {
+    getElements$1(elem).forEach(function (el) {
+        var origHandler = _handler;
+
+        _handler = function handler(e) {
+            off(el, e.type, _handler);
+
+            return origHandler.apply(el, arguments);
+        };
+
+        el[addHandler](normalizeEventName(event), _handler, bubbles || false);
+    });
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.removeEventListener.
+ *
+ * @memberof ch.Event
+ * @type {Function}
+ * @param {HTMLElement|String} elem An HTMLElement or a CSS selector to remove listener from
+ * @param {String} event Event name
+ * @param {Function} handler Event handler function to remove
+ *
+ * @example
+ * tiny.off(document, 'click', fn);
+ */
+function off(elem, event, handler) {
+    getElements$1(elem).forEach(function (el) {
+        el[removeHandler](normalizeEventName(event), handler);
+    });
+}
+
+/**
+ * Crossbrowser implementation of {HTMLElement}.removeEventListener.
+ *
+ * @memberof tiny
+ * @type {Function}
+ * @param {HTMLElement} elem An HTMLElement or a CSS selector to dispatch event to
+ * @param {String|Event} event Event name or an event object
+ *
+ * @example
+ * tiny.trigger('.btn', 'click');
+ */
+function trigger(elem, event, props) {
+    var _this = this;
+
+    var name = typeof event === 'string' ? event : event.type;
+    event = typeof event === 'string' || isPlainObject(event) ? initEvent(event, props) : event;
+
+    getElements$1(elem).forEach(function (el) {
+        // handle focus(), blur() by calling them directly
+        if (event.type in focus && typeof _this[event.type] == 'function') {
+            _this[event.type]();
+        } else {
+            isStandard ? el[dispatch](event) : el[dispatch](normalizeEventName(name), event);
+        }
+    });
+}
+
+var DOMEvents = {
+    on: on,
+    once: once,
+    off: off,
+    trigger: trigger
+};
 
 /**
  * Polyfill for supporting pointer events on every browser
@@ -1368,6 +1537,10 @@ function parent(el, tagname) {
     // Due to polyfill IE8 can has document.createEvent but it has no support for
     // custom Mouse Events
     var supportsMouseEvents = !!window.MouseEvent;
+
+    if (!supportsMouseEvents) {
+        return;
+    }
 
     // The list of standardized pointer events http://www.w3.org/TR/pointerevents/
     var upperCaseEventsNames = ['PointerDown', 'PointerUp', 'PointerMove', 'PointerOver', 'PointerOut', 'PointerCancel', 'PointerEnter', 'PointerLeave'];
@@ -1610,7 +1783,7 @@ function parent(el, tagname) {
         var nameGenerator;
         var eventGenerator;
         if (window.MSPointerEvent) {
-            nameGenerator = function (name) {
+            nameGenerator = function nameGenerator(name) {
                 return getPrefixEventName('MS', name);
             };
             eventGenerator = generateTouchClonedEvent;
@@ -1941,10 +2114,10 @@ function parent(el, tagname) {
  * });
  */
 (function () {
-    'use strict'
+    'use strict';
 
     // IE8 has no support for custom Mouse Events, fallback to onclick
-    ;
+
     if (!window.MouseEvent) {
         return;
     }
@@ -2057,583 +2230,133 @@ function parent(el, tagname) {
     }
 })();
 
-},{}],18:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-exports['default'] = scroll;
-/**
- * Get the current vertical and horizontal positions of the scroll bars.
- *
- * @memberof tiny
- * @returns {{left: (Number), top: (Number)}}
- *
- * @example
- * tiny.scroll().top;
- */
-function scroll() {
-    return {
-        'left': window.pageXOffset || document.documentElement.scrollLeft || 0,
-        'top': window.pageYOffset || document.documentElement.scrollTop || 0
-    };
-}
-
-},{}],19:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
-});
-var support = {
-    /**
-     * Verify that CSS Transitions are supported (or any of its browser-specific implementations).
-     *
-     * @static
-     * @type {Boolean|Object}
-     * @example
-     * if (tiny.support.transition) {
-         *     // Some code here!
-         * }
-     */
-    transition: transitionEnd(),
-
-    /**
-     * Verify that CSS Animations are supported (or any of its browser-specific implementations).
-     *
-     * @static
-     * @type {Boolean|Object}
-     * @example
-     * if (tiny.support.animation) {
-         *     // Some code here!
-         * }
-     */
-    animation: animationEnd(),
-
-    /**
-     * Checks is the User Agent supports touch events.
-     * @type {Boolean}
-     * @example
-     * if (tiny.support.touch) {
-         *     // Some code here!
-         * }
-     */
-    touch: 'ontouchend' in document,
-
-    /**
-     * Checks is the User Agent supports custom events.
-     * @type {Boolean}
-     * @example
-     * if (tiny.support.customEvent) {
-         *     // Some code here!
-         * }
-     */
-    customEvent: (function () {
-        // TODO: find better solution for CustomEvent check
-        try {
-            // IE8 has no support for CustomEvent, in IE gte 9 it cannot be
-            // instantiated but exist
-            new CustomEvent(name, {
-                detail: {}
-            });
-            return true;
-        } catch (e) {
-            return false;
-        }
-    })()
-};
-
-exports['default'] = support;
+var supportsMouseEvents = !!window.MouseEvent;
 
 /**
- * Checks for the CSS Transitions support (http://www.modernizr.com/)
+ * Every time Chico UI needs to inform all visual components that layout has
+ * been changed, it emits this event.
  *
- * @function
- * @private
+ * @constant
+ * @type {String}
  */
-
-function transitionEnd() {
-    var el = document.createElement('tiny');
-
-    var transEndEventNames = {
-        WebkitTransition: 'webkitTransitionEnd',
-        MozTransition: 'transitionend',
-        OTransition: 'oTransitionEnd otransitionend',
-        transition: 'transitionend'
-    };
-
-    for (var _name in transEndEventNames) {
-        if (transEndEventNames.hasOwnProperty(_name) && el.style[_name] !== undefined) {
-            return {
-                end: transEndEventNames[_name]
-            };
-        }
-    }
-
-    return false;
-}
+var onlayoutchange = 'layoutchange';
 
 /**
- * Checks for the CSS Animations support
- *
- * @function
- * @private
+ * Equivalent to 'resize'.
+ * @constant
+ * @type {String}
  */
-function animationEnd() {
-    var el = document.createElement('tiny');
+var onresize = 'resize';
 
-    var animEndEventNames = {
-        WebkitAnimation: 'webkitAnimationEnd',
-        MozAnimation: 'animationend',
-        OAnimation: 'oAnimationEnd oanimationend',
-        animation: 'animationend'
-    };
+/**
+ * Equivalent to 'scroll'.
+ * @constant
+ * @type {String}
+ */
+var onscroll = 'scroll';
 
-    for (var _name2 in animEndEventNames) {
-        if (animEndEventNames.hasOwnProperty(_name2) && el.style[_name2] !== undefined) {
-            return {
-                end: animEndEventNames[_name2]
-            };
-        }
-    }
+/**
+ * Equivalent to 'pointerdown' or 'mousedown', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#dfn-pointerdown | Pointer Events W3C Recommendation
+ */
+var onpointerdown = supportsMouseEvents ? 'pointerdown' : 'mousedown';
 
-    return false;
-}
+/**
+ * Equivalent to 'pointerup' or 'mouseup', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#dfn-pointerup | Pointer Events W3C Recommendation
+ */
+var onpointerup = supportsMouseEvents ? 'pointerup' : 'mouseup';
 
-},{}],20:[function(require,module,exports){
-// Copyright Joyent, Inc. and other Node contributors.
-//
-// Permission is hereby granted, free of charge, to any person obtaining a
-// copy of this software and associated documentation files (the
-// "Software"), to deal in the Software without restriction, including
-// without limitation the rights to use, copy, modify, merge, publish,
-// distribute, sublicense, and/or sell copies of the Software, and to permit
-// persons to whom the Software is furnished to do so, subject to the
-// following conditions:
-//
-// The above copyright notice and this permission notice shall be included
-// in all copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
-// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
-// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
-// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
-// USE OR OTHER DEALINGS IN THE SOFTWARE.
+/**
+ * Equivalent to 'pointermove' or 'mousemove', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#dfn-pointermove | Pointer Events W3C Recommendation
+ */
+var onpointermove = supportsMouseEvents ? 'pointermove' : 'mousemove';
 
-function EventEmitter() {
-  this._events = this._events || {};
-  this._maxListeners = this._maxListeners || undefined;
-}
-module.exports = EventEmitter;
+/**
+ * Equivalent to 'pointertap' or 'click', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#list-of-pointer-events | Pointer Events W3C Recommendation
+ */
+var onpointertap = support.touch && supportsMouseEvents ? 'pointertap' : 'click';
 
-// Backwards-compat with node 0.10.x
-EventEmitter.EventEmitter = EventEmitter;
+/**
+ * Equivalent to 'pointerenter' or 'mouseenter', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#dfn-pointerenter | Pointer Events W3C Recommendation
+ */
+var onpointerenter = supportsMouseEvents ? 'pointerenter' : 'mouseenter';
 
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
+/**
+ * Equivalent to 'pointerleave' or 'mouseleave', depending on browser capabilities.
+ *
+ * @constant
+ * @type {String}
+ * @link http://www.w3.org/TR/pointerevents/#dfn-pointerleave | Pointer Events W3C Recommendation
+ */
+var onpointerleave = supportsMouseEvents ? 'pointerleave' : 'mouseleave';
 
-// By default EventEmitters will print a warning if more than 10 listeners are
-// added to it. This is a useful default which helps finding memory leaks.
-EventEmitter.defaultMaxListeners = 10;
+/**
+ * The DOM input event that is fired when the value of an <input> or <textarea>
+ * element is changed. Equivalent to 'input' or 'keydown', depending on browser
+ * capabilities.
+ *
+ * @constant
+ * @type {String}
+ */
+var onkeyinput = 'oninput' in document.createElement('input') ? 'input' : 'keydown';
 
-// Obviously not all Emitters should be limited to 10. This function allows
-// that to be increased. Set to zero for unlimited.
-EventEmitter.prototype.setMaxListeners = function(n) {
-  if (!isNumber(n) || n < 0 || isNaN(n))
-    throw TypeError('n must be a positive number');
-  this._maxListeners = n;
-  return this;
-};
-
-EventEmitter.prototype.emit = function(type) {
-  var er, handler, len, args, i, listeners;
-
-  if (!this._events)
-    this._events = {};
-
-  // If there is no 'error' event listener then throw.
-  if (type === 'error') {
-    if (!this._events.error ||
-        (isObject(this._events.error) && !this._events.error.length)) {
-      er = arguments[1];
-      if (er instanceof Error) {
-        throw er; // Unhandled 'error' event
-      }
-      throw TypeError('Uncaught, unspecified "error" event.');
-    }
-  }
-
-  handler = this._events[type];
-
-  if (isUndefined(handler))
-    return false;
-
-  if (isFunction(handler)) {
-    switch (arguments.length) {
-      // fast cases
-      case 1:
-        handler.call(this);
-        break;
-      case 2:
-        handler.call(this, arguments[1]);
-        break;
-      case 3:
-        handler.call(this, arguments[1], arguments[2]);
-        break;
-      // slower
-      default:
-        args = Array.prototype.slice.call(arguments, 1);
-        handler.apply(this, args);
-    }
-  } else if (isObject(handler)) {
-    args = Array.prototype.slice.call(arguments, 1);
-    listeners = handler.slice();
-    len = listeners.length;
-    for (i = 0; i < len; i++)
-      listeners[i].apply(this, args);
-  }
-
-  return true;
-};
-
-EventEmitter.prototype.addListener = function(type, listener) {
-  var m;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events)
-    this._events = {};
-
-  // To avoid recursion in the case that type === "newListener"! Before
-  // adding it to the listeners, first emit "newListener".
-  if (this._events.newListener)
-    this.emit('newListener', type,
-              isFunction(listener.listener) ?
-              listener.listener : listener);
-
-  if (!this._events[type])
-    // Optimize the case of one listener. Don't need the extra array object.
-    this._events[type] = listener;
-  else if (isObject(this._events[type]))
-    // If we've already got an array, just append.
-    this._events[type].push(listener);
-  else
-    // Adding the second element, need to change to array.
-    this._events[type] = [this._events[type], listener];
-
-  // Check for listener leak
-  if (isObject(this._events[type]) && !this._events[type].warned) {
-    if (!isUndefined(this._maxListeners)) {
-      m = this._maxListeners;
-    } else {
-      m = EventEmitter.defaultMaxListeners;
-    }
-
-    if (m && m > 0 && this._events[type].length > m) {
-      this._events[type].warned = true;
-      console.error('(node) warning: possible EventEmitter memory ' +
-                    'leak detected. %d listeners added. ' +
-                    'Use emitter.setMaxListeners() to increase limit.',
-                    this._events[type].length);
-      if (typeof console.trace === 'function') {
-        // not supported in IE 10
-        console.trace();
-      }
-    }
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-EventEmitter.prototype.once = function(type, listener) {
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  var fired = false;
-
-  function g() {
-    this.removeListener(type, g);
-
-    if (!fired) {
-      fired = true;
-      listener.apply(this, arguments);
-    }
-  }
-
-  g.listener = listener;
-  this.on(type, g);
-
-  return this;
-};
-
-// emits a 'removeListener' event iff the listener was removed
-EventEmitter.prototype.removeListener = function(type, listener) {
-  var list, position, length, i;
-
-  if (!isFunction(listener))
-    throw TypeError('listener must be a function');
-
-  if (!this._events || !this._events[type])
-    return this;
-
-  list = this._events[type];
-  length = list.length;
-  position = -1;
-
-  if (list === listener ||
-      (isFunction(list.listener) && list.listener === listener)) {
-    delete this._events[type];
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-
-  } else if (isObject(list)) {
-    for (i = length; i-- > 0;) {
-      if (list[i] === listener ||
-          (list[i].listener && list[i].listener === listener)) {
-        position = i;
-        break;
-      }
-    }
-
-    if (position < 0)
-      return this;
-
-    if (list.length === 1) {
-      list.length = 0;
-      delete this._events[type];
-    } else {
-      list.splice(position, 1);
-    }
-
-    if (this._events.removeListener)
-      this.emit('removeListener', type, listener);
-  }
-
-  return this;
-};
-
-EventEmitter.prototype.removeAllListeners = function(type) {
-  var key, listeners;
-
-  if (!this._events)
-    return this;
-
-  // not listening for removeListener, no need to emit
-  if (!this._events.removeListener) {
-    if (arguments.length === 0)
-      this._events = {};
-    else if (this._events[type])
-      delete this._events[type];
-    return this;
-  }
-
-  // emit removeListener for all listeners on all events
-  if (arguments.length === 0) {
-    for (key in this._events) {
-      if (key === 'removeListener') continue;
-      this.removeAllListeners(key);
-    }
-    this.removeAllListeners('removeListener');
-    this._events = {};
-    return this;
-  }
-
-  listeners = this._events[type];
-
-  if (isFunction(listeners)) {
-    this.removeListener(type, listeners);
-  } else if (listeners) {
-    // LIFO order
-    while (listeners.length)
-      this.removeListener(type, listeners[listeners.length - 1]);
-  }
-  delete this._events[type];
-
-  return this;
-};
-
-EventEmitter.prototype.listeners = function(type) {
-  var ret;
-  if (!this._events || !this._events[type])
-    ret = [];
-  else if (isFunction(this._events[type]))
-    ret = [this._events[type]];
-  else
-    ret = this._events[type].slice();
-  return ret;
-};
-
-EventEmitter.prototype.listenerCount = function(type) {
-  if (this._events) {
-    var evlistener = this._events[type];
-
-    if (isFunction(evlistener))
-      return 1;
-    else if (evlistener)
-      return evlistener.length;
-  }
-  return 0;
-};
-
-EventEmitter.listenerCount = function(emitter, type) {
-  return emitter.listenerCount(type);
-};
-
-function isFunction(arg) {
-  return typeof arg === 'function';
-}
-
-function isNumber(arg) {
-  return typeof arg === 'number';
-}
-
-function isObject(arg) {
-  return typeof arg === 'object' && arg !== null;
-}
-
-function isUndefined(arg) {
-  return arg === void 0;
-}
-
-},{}],21:[function(require,module,exports){
-if (typeof Object.create === 'function') {
-  // implementation from standard node.js 'util' module
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
-  };
-} else {
-  // old school shim for old browsers
-  module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
-  }
-}
-
-},{}],22:[function(require,module,exports){
-'use strict';
-
-Object.defineProperty(exports, "__esModule", {
-    value: true
+var events = Object.freeze({
+    onlayoutchange: onlayoutchange,
+    onresize: onresize,
+    onscroll: onscroll,
+    onpointerdown: onpointerdown,
+    onpointerup: onpointerup,
+    onpointermove: onpointermove,
+    onpointertap: onpointertap,
+    onpointerenter: onpointerenter,
+    onpointerleave: onpointerleave,
+    onkeyinput: onkeyinput
 });
-
-var _clone = require('./modules/clone');
-
-var _clone2 = _interopRequireDefault(_clone);
-
-var _extend = require('./modules/extend');
-
-var _extend2 = _interopRequireDefault(_extend);
-
-var _inherits = require('./modules/inherits');
-
-var _inherits2 = _interopRequireDefault(_inherits);
-
-var _eventEmitter = require('./modules/eventEmitter');
-
-var _eventEmitter2 = _interopRequireDefault(_eventEmitter);
-
-var _ajax = require('./modules/ajax');
-
-var _ajax2 = _interopRequireDefault(_ajax);
-
-var _jsonp = require('./modules/jsonp');
-
-var _jsonp2 = _interopRequireDefault(_jsonp);
-
-var _jcors = require('./modules/jcors');
-
-var _jcors2 = _interopRequireDefault(_jcors);
-
-var _isPlainObject = require('./modules/isPlainObject');
-
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
-
-var _support = require('./modules/support');
-
-var _support2 = _interopRequireDefault(_support);
-
-var _classList = require('./modules/classList');
-
-var _classList2 = _interopRequireDefault(_classList);
-
-var _parent = require('./modules/parent');
-
-var _parent2 = _interopRequireDefault(_parent);
-
-var _next = require('./modules/next');
-
-var _next2 = _interopRequireDefault(_next);
-
-var _css = require('./modules/css');
-
-var _css2 = _interopRequireDefault(_css);
-
-var _offset = require('./modules/offset');
-
-var _offset2 = _interopRequireDefault(_offset);
-
-var _scroll = require('./modules/scroll');
-
-var _scroll2 = _interopRequireDefault(_scroll);
-
-var _cookies = require('./modules/cookies');
-
-var _cookies2 = _interopRequireDefault(_cookies);
-
-var _domEvents = require('./modules/domEvents');
-
-var _domEvents2 = _interopRequireDefault(_domEvents);
-
-var _events = require('./modules/events');
-
-var events = _interopRequireWildcard(_events);
-
-function _interopRequireWildcard(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
 var tiny = {
-    clone: _clone2['default'],
-    extend: _extend2['default'],
-    inherits: _inherits2['default'],
-    EventEmitter: _eventEmitter2['default'],
-    ajax: _ajax2['default'],
-    jsonp: _jsonp2['default'],
-    jcors: _jcors2['default'],
-    isPlainObject: _isPlainObject2['default'],
-    support: _support2['default'],
-    addClass: _classList2['default'].addClass,
-    removeClass: _classList2['default'].removeClass,
-    hasClass: _classList2['default'].hasClass,
-    parent: _parent2['default'],
-    next: _next2['default'],
-    css: _css2['default'],
-    offset: _offset2['default'],
-    scroll: _scroll2['default'],
-    cookies: _cookies2['default'],
-    on: _domEvents2['default'].on,
-    bind: _domEvents2['default'].on,
-    one: _domEvents2['default'].once,
-    once: _domEvents2['default'].once,
-    off: _domEvents2['default'].off,
-    trigger: _domEvents2['default'].trigger
+    clone: clone,
+    extend: extend,
+    inherits: inherits,
+    EventEmitter: EventEmitter,
+    ajax: ajax,
+    jsonp: jsonp,
+    jcors: jcors,
+    isPlainObject: isPlainObject,
+    support: support,
+    addClass: classList.addClass,
+    removeClass: classList.removeClass,
+    hasClass: classList.hasClass,
+    parent: parent,
+    next: next,
+    css: css,
+    offset: offset,
+    scroll: scroll,
+    cookies: cookies,
+    on: DOMEvents.on,
+    bind: DOMEvents.on,
+    one: DOMEvents.once,
+    once: DOMEvents.once,
+    off: DOMEvents.off,
+    trigger: DOMEvents.trigger
 };
 
 for (var e in events) {
@@ -2644,6 +2367,6 @@ if (typeof window !== 'undefined') {
     window.tiny = tiny;
 }
 
-exports['default'] = tiny;
+module.exports = tiny;
 
-},{"./modules/ajax":1,"./modules/classList":2,"./modules/clone":3,"./modules/cookies":4,"./modules/css":5,"./modules/domEvents":6,"./modules/eventEmitter":7,"./modules/events":8,"./modules/extend":9,"./modules/inherits":10,"./modules/isPlainObject":11,"./modules/jcors":12,"./modules/jsonp":13,"./modules/next":14,"./modules/offset":15,"./modules/parent":16,"./modules/scroll":18,"./modules/support":19}]},{},[22]);
+},{"events":1,"inherits":2}]},{},[3]);
