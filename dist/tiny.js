@@ -341,7 +341,7 @@ function clone(obj) {
     }
 
     var copy = {},
-        prop = undefined;
+        prop = void 0;
 
     for (prop in obj) {
         if (obj[prop] !== undefined) {
@@ -376,12 +376,12 @@ function isPlainObject(obj) {
 }
 
 function extend() {
-    var options = undefined,
-        name = undefined,
-        src = undefined,
-        copy = undefined,
-        copyIsArray = undefined,
-        clone = undefined,
+    var options = void 0,
+        name = void 0,
+        src = void 0,
+        copy = void 0,
+        copyIsArray = void 0,
+        clone = void 0,
         target = arguments[0] || {},
         i = 1,
         length = arguments.length,
@@ -446,7 +446,7 @@ function extend() {
 
 function ajax(url, settings) {
     var args = arguments;
-    var opts = undefined;
+    var opts = void 0;
 
     settings = args.length === 1 ? args[0] : args[1];
 
@@ -510,7 +510,7 @@ function ajax(url, settings) {
         xhr.onload = function () {
             var mime = xhr.contentType;
             var dataType = mime && mimeTypes[mime[1]] ? mimeTypes[mime[1]].toLowerCase() : 'json';
-            var result = undefined;
+            var result = void 0;
 
             if (dataType === 'json') {
                 try {
@@ -528,7 +528,7 @@ function ajax(url, settings) {
         // has no `onload` event https://msdn.microsoft.com/en-us/library/ms535874(v=vs.85).aspx#events
         xhr.onreadystatechange = function () {
             if (xhr.readyState === 4) {
-                var result = undefined;
+                var result = void 0;
                 var status = xhr.status === 1223 ? 204 : xhr.status;
 
                 if (status >= 200 && status < 300 || status === 304) {
@@ -616,11 +616,11 @@ var jsonpCount = 0;
  * }
  */
 function jsonp(url, settings) {
-    var id = undefined,
-        script = undefined,
-        timer = undefined,
-        cleanup = undefined,
-        cancel = undefined;
+    var id = void 0,
+        script = void 0,
+        timer = void 0,
+        cleanup = void 0,
+        cancel = void 0;
 
     var opts = extend({
         prefix: '__jsonp',
@@ -694,8 +694,8 @@ var node_elementScript = document$1.getElementsByTagName('script')[0];
 var buffer = [];
 var lastBufferIndex = 0;
 var createCORSRequest = function () {
-    var xhr = undefined,
-        CORSRequest = undefined;
+    var xhr = void 0,
+        CORSRequest = void 0;
     if (window.XMLHttpRequest) {
         xhr = new window.XMLHttpRequest();
         if ('withCredentials' in xhr) {
@@ -736,7 +736,7 @@ function finishedTask(index) {
 
 function executeBuffer() {
     var dep = true,
-        script = undefined,
+        script = void 0,
         index = lastBufferIndex,
         len = buffer.length;
 
@@ -756,7 +756,7 @@ function loadsAndExecuteScriptsOnChain() {
     if (buffer.length) {
         (function () {
             var scr = buffer.pop(),
-                script = undefined;
+                script = void 0;
             if (typeof scr === 'string') {
                 script = node_createElementScript.cloneNode(true);
                 script.type = 'text/javascript';
@@ -1172,7 +1172,7 @@ function offset(el) {
  */
 function getFixedParent(el) {
     var currentParent = el.offsetParent,
-        parent = undefined;
+        parent = void 0;
 
     while (parent === undefined) {
 
@@ -1382,7 +1382,7 @@ function initEvent(name, props) {
         props = name;
         name = props.type;
     }
-    var event = undefined,
+    var event = void 0,
         isDomEvent = DOM_EVENTS.indexOf(name) !== -1,
         isMouseEvent = isDomEvent && MOUSE_EVENTS.indexOf(name) !== -1;
 
