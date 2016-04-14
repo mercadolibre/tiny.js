@@ -13,6 +13,6 @@ env:
   es6: true
   browser: true
   node: true
-ecmaFeatures:
-  modules: true
+parserOptions:
+  sourceType: 'module'
 extends: 'eslint:recommended'
