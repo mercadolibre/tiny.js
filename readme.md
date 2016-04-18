@@ -439,3 +439,8 @@ Oleh Burkhay (UX Front-End), and [contributors](https://github.com/mercadolibre/
 
 ## Browser support
 Tested on IE8+ and major browsers.
+
+## License
+Licensed under the MIT license.
+
+Copyright (c) 2016 [MercadoLibre](http://github.com/mercadolibre).
