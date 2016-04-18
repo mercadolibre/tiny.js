@@ -1,7 +1,7 @@
 /*!
  * tiny.js v0.1.8
  *
- * Copyright (c) 2016, MercadoLibre.com
+ * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
  * https://raw.githubusercontent.com/mercadolibre/tiny.js/master/LICENSE
  */
