@@ -1,4 +1,5 @@
-const isClassList = !!document.body.classList;
+const testEl = document.createElement('div');
+const isClassList = !!testEl.classList;
 
 /**
  * Adds the specified class to an element
