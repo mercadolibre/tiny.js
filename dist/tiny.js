@@ -1,5 +1,5 @@
 /*!
- * tiny.js v0.1.8
+ * tiny.js v0.2.0
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
@@ -463,7 +463,9 @@ function ajax(url, settings) {
         url: args.length === 2 && typeof url === 'string' ? url : '.',
         cache: true,
         data: {},
-        headers: {},
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
+        },
         context: null,
         dataType: 'text',
         method: 'GET',
@@ -507,9 +509,30 @@ function ajax(url, settings) {
         complete(status, xhr);
     };
 
+    // Normalize the method name
+    opts.method = opts.method.toUpperCase();
+
+    // Set the cross domain option
+    // To avoid the preflight requests please use the "simple" requests only
+    // @see https://www.w3.org/TR/cors/#resource-requests
+    var testAnchor = document.createElement('a');
+    var originAnchor = document.createElement('a');
+    originAnchor.href = location.href;
+
+    try {
+        testAnchor.href = opts.url;
+
+        // Support: IE lte 11
+        // Anchor's host property isn't correctly set when opts.url is relative
+        testAnchor.href = testAnchor.href;
+        opts.crossDomain = originAnchor.protocol + '//' + originAnchor.host !== testAnchor.protocol + '//' + testAnchor.host;
+    } catch (e) {
+        opts.crossDomain = true;
+    }
+
     var xhr = new XMLHttpRequest();
 
-    var useXDR = opts.credentials === 'include' && !('withCredentials' in xhr) && 'XDomainRequest' in window;
+    var useXDR = opts.crossDomain && !('withCredentials' in xhr) && 'XDomainRequest' in window;
 
     if (useXDR) {
         // Use XDomainRequest instead of XMLHttpRequest for IE<=9 and when CORS is requested
@@ -571,11 +594,9 @@ function ajax(url, settings) {
         opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
     }
 
-    if (opts.method === 'POST') {
-        opts.headers = extend(opts.headers, {
-            'X-Requested-With': 'XMLHttpRequest',
-            'Content-type': 'application/x-www-form-urlencoded'
-        });
+    // Set the "X-Requested-With" header only if it is not already set
+    if (!opts.crossDomain && !opts.headers['X-Requested-With']) {
+        opts.headers['X-Requested-With'] = 'XMLHttpRequest';
     }
 
     if (opts.credentials === 'include') {
@@ -933,7 +954,8 @@ function animationEnd() {
     return false;
 }
 
-var isClassList = !!document.body.classList;
+var testEl = document.createElement('div');
+var isClassList = !!testEl.classList;
 
 /**
  * Adds the specified class to an element
