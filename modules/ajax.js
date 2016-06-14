@@ -11,10 +11,8 @@ export default function ajax(url, settings) {
     const defaults = {
         url: (args.length === 2 && typeof url === 'string' ? url : '.'),
         cache: true,
-        data: {},
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
+        data: null,
+        headers: {},
         context: null,
         dataType: 'text',
         method: 'GET',
@@ -58,6 +56,46 @@ export default function ajax(url, settings) {
     let error = function (error, status, xhr) {
         opts.error.call(opts.context, xhr, status, error);
         complete(status, xhr);
+    };
+
+    // toString shortcut for DRY
+    const toString = Object.prototype.toString;
+
+    const normalizeRequestData = function (data, headers, cors) {
+        const charset = 'charset=UTF-8';
+        const formUrlEncoded = `application/x-www-form-urlencoded; ${charset}`;
+
+        if ((typeof FormData !== 'undefined' && data instanceof FormData) ||
+            /^\[object\s(ArrayBuffer|File|Blob)\]$/.test(toString.call(data))
+        ) {
+            return data;
+        }
+
+        if (typeof URLSearchParams !== 'undefined' && data instanceof URLSearchParams ||
+            typeof data === 'string'
+        ) {
+            if (headers['Content-Type'] === undefined) {
+                headers['Content-Type'] = formUrlEncoded;
+            }
+
+            return data.toString();
+        }
+
+        if (data !== null && typeof data === 'object') {
+            if (headers['Content-Type'] === undefined) {
+                if (cors) {
+                    // The content type of a CORS request is limited to
+                    // application/x-www-form-urlencoded, multipart/form-data, or text/plain
+                    headers['Content-Type'] = formUrlEncoded;
+                } else {
+                    headers['Content-Type'] = `application/json;  ${charset}`;
+                }
+            }
+
+            return JSON.stringify(data);
+        }
+
+        return data;
     };
 
     // Normalize the method name
@@ -154,6 +192,8 @@ export default function ajax(url, settings) {
     if (opts.credentials === 'include') {
         xhr.withCredentials = true;
     }
+
+    opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
 
     if (!useXDR) {
         for (let key in opts.headers) {
