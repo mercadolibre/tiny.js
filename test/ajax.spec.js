@@ -28,22 +28,29 @@ describe('tiny.ajax', () => {
         });
     });
 
-    it.skip('is should make a POST request', (done) => {
+    it('is should make a POST request', (done) => {
+        let successCallback = function(data, status) {
+            expect(success).to.have.been.called.once;
+            expect(success).to.have.been.called.with('success');
+            expect(data[0]).to.eql({id: 'MLA', name: 'Argentina'});
+        };
+
         let completeCallback = function(xhr, status) {
-            expect(complete).to.have.been.called.with('error');
-            expect(error).to.have.been.called.once;
-            expect(success).to.not.have.been.called();
+            expect(xhr.status).to.equal(200);
+            expect(complete).to.have.been.called.with('success');
+            expect(error).to.not.have.been.called();
             done();
         };
 
-        let success = chai.spy();
         let error = chai.spy();
+        let success = chai.spy(successCallback);
         let complete = chai.spy(completeCallback);
 
         ajax('mock/sites.json', {
             success,
             error,
             complete,
+            dataType: 'json',
             method: 'POST'
         });
     });
