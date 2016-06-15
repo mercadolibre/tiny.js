@@ -1,5 +1,5 @@
 /*!
- * tiny.js v0.2.0
+ * tiny.js v0.2.1
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
@@ -462,10 +462,8 @@ function ajax(url, settings) {
     var defaults = {
         url: args.length === 2 && typeof url === 'string' ? url : '.',
         cache: true,
-        data: {},
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
-        },
+        data: null,
+        headers: {},
         context: null,
         dataType: 'text',
         method: 'GET',
@@ -507,6 +505,42 @@ function ajax(url, settings) {
     var error = function error(_error, status, xhr) {
         opts.error.call(opts.context, xhr, status, _error);
         complete(status, xhr);
+    };
+
+    // toString shortcut for DRY
+    var toString = Object.prototype.toString;
+
+    var normalizeRequestData = function normalizeRequestData(data, headers, cors) {
+        var charset = 'charset=UTF-8';
+        var formUrlEncoded = 'application/x-www-form-urlencoded; ' + charset;
+
+        if (typeof FormData !== 'undefined' && data instanceof FormData || /^\[object\s(ArrayBuffer|File|Blob)\]$/.test(toString.call(data))) {
+            return data;
+        }
+
+        if (typeof URLSearchParams !== 'undefined' && data instanceof URLSearchParams || typeof data === 'string') {
+            if (headers['Content-Type'] === undefined) {
+                headers['Content-Type'] = formUrlEncoded;
+            }
+
+            return data.toString();
+        }
+
+        if (data !== null && (typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object') {
+            if (headers['Content-Type'] === undefined) {
+                if (cors) {
+                    // The content type of a CORS request is limited to
+                    // application/x-www-form-urlencoded, multipart/form-data, or text/plain
+                    headers['Content-Type'] = formUrlEncoded;
+                } else {
+                    headers['Content-Type'] = 'application/json;  ' + charset;
+                }
+            }
+
+            return JSON.stringify(data);
+        }
+
+        return data;
     };
 
     // Normalize the method name
@@ -602,6 +636,8 @@ function ajax(url, settings) {
     if (opts.credentials === 'include') {
         xhr.withCredentials = true;
     }
+
+    opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
 
     if (!useXDR) {
         for (var key in opts.headers) {
