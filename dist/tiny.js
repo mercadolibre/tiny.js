@@ -1,5 +1,5 @@
 /*!
- * tiny.js v0.2.1
+ * tiny.js v0.2.2
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
@@ -621,6 +621,10 @@ function ajax(url, settings) {
     xhr.onerror = function () {
         error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
     };
+
+    if ((opts.method === 'GET' || opts.method === 'HEAD') && typeof opts.data === 'string') {
+        opts.url += (~opts.url.indexOf('?') ? '&' : '?') + opts.data;
+    }
 
     xhr.open(opts.method, opts.url);
 
