@@ -24,7 +24,8 @@ describe('tiny.ajax', () => {
             error,
             complete,
             dataType: 'json',
-            method: 'GET'
+            method: 'GET',
+            data: 'a=1&b=2'
         });
     });
 

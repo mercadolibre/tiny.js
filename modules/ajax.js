@@ -178,6 +178,10 @@ export default function ajax(url, settings) {
         error(new Error(xhr.statusText || 'Network request failed'), 'error', xhr, opts);
     };
 
+    if ((opts.method === 'GET' || opts.method === 'HEAD') && typeof opts.data === 'string') {
+        opts.url += (~opts.url.indexOf('?') ? '&' : '?') + opts.data;
+    }
+
     xhr.open(opts.method, opts.url);
 
     if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
