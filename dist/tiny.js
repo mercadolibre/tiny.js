@@ -1,5 +1,5 @@
 /*!
- * tiny.js v0.2.2
+ * tiny.js v0.2.3
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
@@ -1978,9 +1978,12 @@ var DOMEvents = {
 
     function getFirstCommonNode(x, y) {
         while (x) {
-            if (x.contains(y)) return x;
+            if (x === document.documentElement || x.contains && x.contains(y)) {
+                return x;
+            }
             x = x.parentNode;
         }
+
         return null;
     }
 
