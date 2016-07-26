@@ -421,10 +421,12 @@
 
     function getFirstCommonNode(x, y) {
         while (x) {
-            if (x.contains(y))
+            if (x === document.documentElement || (x.contains && x.contains(y))) {
                 return x;
+            }
             x = x.parentNode;
         }
+
         return null;
     }
 
