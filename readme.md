@@ -43,7 +43,7 @@ bower install tiny
 ### From CDN
 
 ```html
-<script src="//ui.mlstatic.com/chico/tiny/x.x.x/tiny.min.js"></script>
+<script src="https://http2.mlstatic.com/ui/chico/tiny/[VERSION]/tiny.min.js"></script>
 ```
 
 Check [releases](https://github.com/mercadolibre/tiny.js/releases) to find the latest version number.
@@ -270,9 +270,9 @@ Example:
 ```js
 tiny.ajax(
     "http://xxxx/data.json", {
-    success: fn,
-    dataType: "json",
-    credentials: "include"
+      success: fn,
+      dataType: "json",
+      credentials: "include"
   }
 );
 ```
