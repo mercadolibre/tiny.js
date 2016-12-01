@@ -269,10 +269,11 @@ Performs an asynchronous HTTP (Ajax) request.
 Example:
 ```js
 tiny.ajax(
-    "http://xxxx/data.json",
+    "http://xxxx/data.json", {
     success: fn,
     dataType: "json",
     credentials: "include"
+  }
 );
 ```
 
