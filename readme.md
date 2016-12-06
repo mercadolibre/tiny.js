@@ -289,6 +289,7 @@ Performs a JSONP request
     - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
     - `success`: type `Function`. Success callback function.
     - `error`: type `Function`. Error callback function.
+    - `autoCleanup`: type `Boolean`. Cleans the callback function after the first call to guarantee the single execution of callback. Default: `true`
 
 
 ### `tiny.jcors(...args)`

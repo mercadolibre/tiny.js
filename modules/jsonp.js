@@ -41,7 +41,8 @@ export default function jsonp(url, settings) {
         param: 'callback',
         timeout : 15000,
         success: noop,
-        error: noop
+        error: noop,
+        autoCleanup: true
     }, settings);
 
     // Generate an unique id for the request.
@@ -67,13 +68,13 @@ export default function jsonp(url, settings) {
 
     if (opts.timeout) {
         timer = setTimeout(() => {
-            cleanup();
+            opts.autoCleanup && cleanup();
             opts.error(new Error('Script loading timeout'));
         }, opts.timeout);
     }
 
     window[id] = function(data) {
-        cleanup();
+        opts.autoCleanup && cleanup();
         opts.success(data);
     };
 
@@ -86,7 +87,7 @@ export default function jsonp(url, settings) {
     script.type = 'text/javascript';
     script.src = url;
     script.onerror = function (e) {
-        cleanup();
+        opts.autoCleanup && cleanup();
         opts.error(new Error(e.message || 'Script Error'));
     };
     head.appendChild(script);
