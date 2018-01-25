@@ -63,7 +63,7 @@ Returns an `Object`.
 
 ### `tiny.extend([deep,] target, ...sources)`
 
-Copy all of the properties of the sources to the target object and returns the 
+Copy all of the properties of the sources to the target object and returns the
   resulting object. The last source will override properties of the same name in
   previous object.
 
@@ -102,7 +102,7 @@ The most relevant methods:
 **[WIP]**
 
 **See the [external module](https://www.npmjs.com/package/events) and the
-  [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter) 
+  [docs](https://nodejs.org/api/events.html#events_class_events_eventemitter)
   for a complete reference.**
 
 
@@ -223,7 +223,7 @@ Get the parent of an element, optionally filtered by a tag
 
 ### `tiny.next(el)`
 
-Get the next element sibling 
+Get the next element sibling
 
 - `el`: An `HTMLElement`
 
@@ -232,7 +232,7 @@ Get the next element sibling
 
 Get the value of a computed style for the first element in set of
   matched elements or set one or more CSS properties for every matched element.
-  
+
 - `el`: An `HTMLElement` or a valid CSS selector.
 - `key`: A CSS property name. Can be an object of property-value pairs to set.
 - `value`: A value to set for the property.
@@ -260,11 +260,12 @@ Performs an asynchronous HTTP (Ajax) request.
     - `headers`: type `Object` A list of additional headers, for example `{ 'X-Auth': 'auth-token' }`
     - `context`: type `Object` Every callback will be called in context of `settings.context` or `window` if not provided
     - `dataType`: type `String` A mime type, [json,html,text]
-    - `method`: type `String` A valid HTTP method, [GET|POST|PUT|DELETE] 
+    - `method`: type `String` A valid HTTP method, [GET|POST|PUT|DELETE]
     - `credentials`: type `Sting` Use the `"include"` value to send cookies in a CORS request, not supported in IE lte 9. Default is `"omit"`
     - `success`: type `Function` A success callback that receives response data, status and xhr object.
     - `error`: type `Function` An error callback that receives xhr, status and error object.
     - `complete`: A success callback that receives response data, status and xhr object.
+    - `preload`: type `Boolean`.  If set to `true`, it will sent requests without HTTP headers to match with the preloaded resource by the browser. Default: `false`.
 
 Example:
 ```js
@@ -284,7 +285,7 @@ Performs a JSONP request
 - `url`: type `String`. The URL of the requested resource.
 - `settings`: type `Object`. Optional.
     - `prefix`: type `String`. Prefix for the callback functions that handle JSONP responses. Default: `"__jsonp"`
-    - `name`: type `String|Function`. A name of the callback function that handle JSONP response. 
+    - `name`: type `String|Function`. A name of the callback function that handle JSONP response.
         Can be a function that receives the prefix and the request id (increment). Default: `settings.prefix + increment`
     - `param`: type `String`. A name of the query string parameter. Default: `"callback"`
     - `timeout`: type `Number`. How long after the request until a timeout error will occur. Default: `15000`
@@ -305,8 +306,8 @@ tiny.jcors(
         $("#demo").html("jQuery Loaded");
     },
     "http://xxxx/jquery.cookie.js",
-    function() {  
-        $.cookie('not_existing'); 
+    function() {
+        $.cookie('not_existing');
     }
 );
 ```
