@@ -1,5 +1,5 @@
 /*!
- * tiny.js v0.2.4
+ * tiny.js v0.2.5
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
@@ -65,8 +65,12 @@ EventEmitter.prototype.emit = function(type) {
       er = arguments[1];
       if (er instanceof Error) {
         throw er; // Unhandled 'error' event
+      } else {
+        // At least give some kind of context to the user
+        var err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        throw err;
       }
-      throw TypeError('Uncaught, unspecified "error" event.');
     }
   }
 
@@ -333,7 +337,7 @@ if (typeof Object.create === 'function') {
 },{}],3:[function(require,module,exports){
 'use strict';
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 function _interopDefault(ex) {
     return ex && (typeof ex === 'undefined' ? 'undefined' : _typeof(ex)) === 'object' && 'default' in ex ? ex['default'] : ex;
@@ -441,8 +445,8 @@ function extend() {
 
                     // Don't bring in undefined values
                 } else if (copy !== undefined) {
-                        target[name] = copy;
-                    }
+                    target[name] = copy;
+                }
             }
         }
     }
@@ -470,7 +474,8 @@ function ajax(url, settings) {
         credentials: 'omit',
         success: noop,
         error: noop,
-        complete: noop
+        complete: noop,
+        preload: false
     };
 
     opts = extend(defaults, settings || {});
@@ -628,24 +633,28 @@ function ajax(url, settings) {
 
     xhr.open(opts.method, opts.url);
 
-    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
-        opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
-    }
-
-    // Set the "X-Requested-With" header only if it is not already set
-    if (!opts.crossDomain && !opts.headers['X-Requested-With']) {
-        opts.headers['X-Requested-With'] = 'XMLHttpRequest';
-    }
-
     if (opts.credentials === 'include') {
         xhr.withCredentials = true;
     }
 
-    opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
+    // If the ajax will use preload, it must not have headers for match with the request
+    // made by <link rel="preload" as="fetch">.
+    if (!opts.preload) {
+        if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
+            opts.headers.Accept = dataTypes[opts.dataType.toLowerCase()] + ', */*; q=0.01';
+        }
 
-    if (!useXDR) {
-        for (var key in opts.headers) {
-            xhr.setRequestHeader(key, opts.headers[key]);
+        // Set the "X-Requested-With" header only if it is not already set
+        if (!opts.crossDomain && !opts.headers['X-Requested-With']) {
+            opts.headers['X-Requested-With'] = 'XMLHttpRequest';
+        }
+
+        opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
+
+        if (!useXDR) {
+            for (var key in opts.headers) {
+                xhr.setRequestHeader(key, opts.headers[key]);
+            }
         }
     }
 
@@ -823,30 +832,28 @@ function executeBuffer() {
 
 function loadsAndExecuteScriptsOnChain() {
     if (buffer.length) {
-        (function () {
-            var scr = buffer.pop(),
-                script = void 0;
-            if (typeof scr === 'string') {
-                script = node_createElementScript.cloneNode(true);
-                script.type = 'text/javascript';
-                script.async = true;
-                script.src = scr;
-                script.onload = script.onreadystatechange = function () {
-                    if (!script.readyState || /loaded|complete/.test(script.readyState)) {
-                        // Handle memory leak in IE
-                        script.onload = script.onreadystatechange = null;
-                        // Dereference the script
-                        script = undefined;
-                        // Load
-                        loadsAndExecuteScriptsOnChain();
-                    }
-                };
-                node_elementScript.parentNode.insertBefore(script, node_elementScript);
-            } else {
-                scr.apply(window);
-                loadsAndExecuteScriptsOnChain();
-            }
-        })();
+        var scr = buffer.pop(),
+            script = void 0;
+        if (typeof scr === 'string') {
+            script = node_createElementScript.cloneNode(true);
+            script.type = 'text/javascript';
+            script.async = true;
+            script.src = scr;
+            script.onload = script.onreadystatechange = function () {
+                if (!script.readyState || /loaded|complete/.test(script.readyState)) {
+                    // Handle memory leak in IE
+                    script.onload = script.onreadystatechange = null;
+                    // Dereference the script
+                    script = undefined;
+                    // Load
+                    loadsAndExecuteScriptsOnChain();
+                }
+            };
+            node_elementScript.parentNode.insertBefore(script, node_elementScript);
+        } else {
+            scr.apply(window);
+            loadsAndExecuteScriptsOnChain();
+        }
     }
 }
 
@@ -1155,12 +1162,12 @@ function getElStyle(el, prop) {
         return window.getComputedStyle(el, null).getPropertyValue(prop);
         // IE
     } else {
-            // Turn style name into camel notation
-            prop = prop.replace(/\-(\w)/g, function (str, $1) {
-                return $1.toUpperCase();
-            });
-            return el.currentStyle[prop];
-        }
+        // Turn style name into camel notation
+        prop = prop.replace(/\-(\w)/g, function (str, $1) {
+            return $1.toUpperCase();
+        });
+        return el.currentStyle[prop];
+    }
 }
 
 function getElements(el) {
