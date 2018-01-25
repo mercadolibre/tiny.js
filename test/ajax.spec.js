@@ -29,6 +29,28 @@ describe('tiny.ajax', () => {
         });
     });
 
+    it('is should make a GET request with preload', (done) => {
+        let completeCallback = function(xhr, status) {
+            expect(typeof xhr).to.equal('object');
+            expect(typeof status).to.equal('string');
+            expect(success).to.have.been.called.once;
+            expect(complete).to.have.been.called.with('success');
+            expect(error).to.not.have.been.called();
+            done();
+        };
+
+        let success = chai.spy();
+        let error = chai.spy();
+        let complete = chai.spy(completeCallback);
+
+        ajax('mock/sites.json', {
+            success,
+            error,
+            complete,
+            preload: true
+        });
+    });
+
     it('is should make a POST request', (done) => {
         let successCallback = function(data, status) {
             expect(success).to.have.been.called.once;

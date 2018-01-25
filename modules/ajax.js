@@ -19,7 +19,8 @@ export default function ajax(url, settings) {
         credentials: 'omit',
         success: noop,
         error: noop,
-        complete: noop
+        complete: noop,
+        preload: false
     };
 
     opts = extend(defaults, settings || {});
@@ -184,24 +185,28 @@ export default function ajax(url, settings) {
 
     xhr.open(opts.method, opts.url);
 
-    if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
-        opts.headers.Accept = `${dataTypes[opts.dataType.toLowerCase()]}, */*; q=0.01`;
-    }
-
-    // Set the "X-Requested-With" header only if it is not already set
-    if (!opts.crossDomain && !opts.headers['X-Requested-With']) {
-        opts.headers['X-Requested-With'] = 'XMLHttpRequest';
-    }
-
     if (opts.credentials === 'include') {
         xhr.withCredentials = true;
     }
 
-    opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
+    // If the ajax will use preload, it must not have headers for match with the request
+    // made by <link rel="preload" as="fetch">.
+    if (!opts.preload) {
+        if (opts.dataType && dataTypes[opts.dataType.toLowerCase()]) {
+            opts.headers.Accept = `${dataTypes[opts.dataType.toLowerCase()]}, */*; q=0.01`;
+        }
 
-    if (!useXDR) {
-        for (let key in opts.headers) {
-            xhr.setRequestHeader(key, opts.headers[key]);
+        // Set the "X-Requested-With" header only if it is not already set
+        if (!opts.crossDomain && !opts.headers['X-Requested-With']) {
+            opts.headers['X-Requested-With'] = 'XMLHttpRequest';
+        }
+
+        opts.data = normalizeRequestData(opts.data, opts.headers, opts.crossDomain);
+
+        if (!useXDR) {
+            for (let key in opts.headers) {
+                xhr.setRequestHeader(key, opts.headers[key]);
+            }
         }
     }
 
