@@ -59,16 +59,16 @@ function set(key, value, options) {
 
         switch (sameSiteOpt) {
         case true:
-            sameSite += '; samesite=strict';
+            sameSite += '; SameSite=Strict';
             break;
         case 'lax':
-            sameSite += '; samesite=lax';
+            sameSite += '; SameSite=Lax';
             break;
         case 'strict':
-            sameSite += '; samesite=strict';
+            sameSite += '; SameSite=Strict';
             break;
         case 'none':
-            sameSite += '; samesite=none';
+            sameSite += '; SameSite=None';
             break;
         }
     }
