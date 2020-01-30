@@ -1,11 +1,11 @@
 /*!
- * tiny.js v0.2.5
+ * tiny.js v0.3.0
  *
  * Copyright (c) 2015, MercadoLibre.com
  * Released under the MIT license.
  * https://raw.githubusercontent.com/mercadolibre/tiny.js/master/LICENSE
  */
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 // Copyright Joyent, Inc. and other Node contributors.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a
@@ -313,24 +313,28 @@ function isUndefined(arg) {
 if (typeof Object.create === 'function') {
   // implementation from standard node.js 'util' module
   module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    ctor.prototype = Object.create(superCtor.prototype, {
-      constructor: {
-        value: ctor,
-        enumerable: false,
-        writable: true,
-        configurable: true
-      }
-    });
+    if (superCtor) {
+      ctor.super_ = superCtor
+      ctor.prototype = Object.create(superCtor.prototype, {
+        constructor: {
+          value: ctor,
+          enumerable: false,
+          writable: true,
+          configurable: true
+        }
+      })
+    }
   };
 } else {
   // old school shim for old browsers
   module.exports = function inherits(ctor, superCtor) {
-    ctor.super_ = superCtor
-    var TempCtor = function () {}
-    TempCtor.prototype = superCtor.prototype
-    ctor.prototype = new TempCtor()
-    ctor.prototype.constructor = ctor
+    if (superCtor) {
+      ctor.super_ = superCtor
+      var TempCtor = function () {}
+      TempCtor.prototype = superCtor.prototype
+      ctor.prototype = new TempCtor()
+      ctor.prototype.constructor = ctor
+    }
   }
 }
 
@@ -1312,15 +1316,35 @@ function set(key, value, options) {
     }
 
     if (expires && 'toGMTString' in expires) {
-        expires = ';expires=' + expires.toGMTString();
+        expires = '; expires=' + expires.toGMTString();
     }
 
-    var path = ';path=' + (options.path || defaults.path);
+    var path = '; path=' + (options.path || defaults.path);
 
     var domain = options.domain || defaults.domain;
-    domain = domain ? ';domain=' + domain : '';
+    domain = domain ? '; domain=' + domain : '';
 
-    var secure = options.secure || defaults.secure ? ';secure' : '';
+    var sameSite = '';
+    if (options.sameSite) {
+        var sameSiteOpt = typeof options.sameSite === 'string' ? options.sameSite.toLowerCase() : options.sameSite;
+
+        switch (sameSiteOpt) {
+            case true:
+                sameSite += '; SameSite=Strict';
+                break;
+            case 'lax':
+                sameSite += '; SameSite=Lax';
+                break;
+            case 'strict':
+                sameSite += '; SameSite=Strict';
+                break;
+            case 'none':
+                sameSite += '; SameSite=None';
+                break;
+        }
+    }
+
+    var secure = options.secure || defaults.secure ? '; secure' : '';
 
     if ((typeof value === 'undefined' ? 'undefined' : _typeof(value)) == 'object') {
         if (Array.isArray(value) || isPlainObject(value)) {
@@ -1330,7 +1354,7 @@ function set(key, value, options) {
         }
     }
 
-    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure;
+    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure + sameSite;
 }
 
 function remove(key) {
