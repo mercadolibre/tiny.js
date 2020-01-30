@@ -22,7 +22,7 @@ Methods are implemented individually and not as part of a whole.
 There are multiple ways to use Tiny.
 
 
-### Inline resource (recommended)
+### Inline resource (recommended)
 
 Grab [the distributable code](https://github.com/mercadolibre/tiny.js/blob/master/dist/tiny.min.js) and embed into a `<script>` tag just before the closing `</body>` tag.
 
@@ -367,11 +367,13 @@ Create cookie
   - `path`: type `String`. A String indicating the path where the cookie is visible.
   - `domain`: type `string`. A valid domain where the cookie should be visible.
   - `secure`: type `Boolean`. Indicate if the cookie transmission requires a secure protocol (https).
+  - `sameSite`: type `Boolean|String`. It’s designed to protect from so-called XSRF (cross-site request forgery) attacks.
 
 Example:
 ```js
 tiny.cookies.set('ID', 1); // Create session cookie
 tiny.cookies.set('ID', 2, { expires: 14 }); // Creates a cookie that expires in 14 days
+tiny.cookies.set('ID', 2, { sameSite: 'None', secure: true }); // Creates a cookie with SameSite=None; Secure
 ```
 
 

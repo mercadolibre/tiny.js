@@ -44,15 +44,36 @@ function set(key, value, options) {
     }
 
     if (expires && 'toGMTString' in expires) {
-        expires = ';expires=' + expires.toGMTString();
+        expires = '; expires=' + expires.toGMTString();
     }
 
-    let path = ';path=' + (options.path || defaults.path);
+    let path = '; path=' + (options.path || defaults.path);
 
     let domain = options.domain || defaults.domain;
-    domain = domain ? ';domain=' + domain : '';
+    domain = domain ? '; domain=' + domain : '';
 
-    let secure = options.secure || defaults.secure ? ';secure' : '';
+    let sameSite = '';
+    if (options.sameSite) {
+        let sameSiteOpt = typeof options.sameSite === 'string'
+            ? options.sameSite.toLowerCase() : options.sameSite;
+
+        switch (sameSiteOpt) {
+        case true:
+            sameSite += '; SameSite=Strict';
+            break;
+        case 'lax':
+            sameSite += '; SameSite=Lax';
+            break;
+        case 'strict':
+            sameSite += '; SameSite=Strict';
+            break;
+        case 'none':
+            sameSite += '; SameSite=None';
+            break;
+        }
+    }
+
+    let secure = options.secure || defaults.secure ? '; secure' : '';
 
     if (typeof value == 'object') {
         if (Array.isArray(value) || isPlainObject(value)) {
@@ -62,7 +83,7 @@ function set(key, value, options) {
         }
     }
 
-    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure;
+    document.cookie = encodeCookie(key) + '=' + encodeCookie(value) + expires + path + domain + secure + sameSite;
 }
 
 function remove(key) {
